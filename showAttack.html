@@ -691,7 +691,7 @@
     satSate.length=48;
     satSate.fill(0);
 
-    alert(satSate[1]);
+    //alert(satSate[1]);
 
     var currentSat=1;//当前动画开始的卫星
 
@@ -760,7 +760,7 @@
                     if(satSate.every(checkSat)&&alertFlag==0){
                         alertFlag=1;
                         animationStop=1;
-                        alert("洪泛结束"+animationStop);
+                        alert("洪泛结束");
 
                     }
                     return;
@@ -1393,13 +1393,14 @@
                     arrow((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10,720+stPostion[1]*4,360-(stPostion[0]*4),1,0);
                     arrow((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10,720+stPostion[4]*4,360-(stPostion[3]*4),1,0);
                     flowLSU(0);
-                    cxt.beginPath();
+                    /*cxt.beginPath();
                     cxt.moveTo(720+stPostion[4]*4,360-(stPostion[3]*4));
                     cxt.lineTo(720+stPostion[1]*4,360-(stPostion[0]*4));
                     cxt.strokeStyle="#00FF00";
                     cxt.lineWidth=3;
                     cxt.stroke();
                     cxt.closePath();
+                     */
                     //alert("第4步");
                     //cxt.fillStyle="#C0C0C0"
                     //cxt.fillRect(1260,620,160,80);
