@@ -1,0 +1,1672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>卫星攻击过程展示</title>
+</head>
+<style type="text/css">
+    /*为了能够设置两个标签叠加在一起，需要设置其父标签*/
+    .father{
+        /*标签位置设置为相对的*/
+        position: relative;
+        width: 1440px;
+    }
+    /*canvas的大小需要在起标签内设置，否则会拉伸或缩小默认的大小*/
+    .canvas{
+        border:0px solid black;
+        /*位置绝对*/
+        position: absolute;
+        top: 0;
+        left: 0;
+        /*设置所在层数，在上层*/
+        z-index: 1;
+    }
+    /*需要将img背景图的尺寸和canvas的尺寸设置相同*/
+    .canvas_bgp{
+        width: 1440px;
+        height: 720px;
+        /*位置绝对*/
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+    .btn1{
+        left:1445px;
+        position: absolute;
+        width: 100px;
+        height: 25px;
+    }
+    .text{
+        left:1445px;
+        position: absolute;
+        top:0px;
+    }
+    .btn2{
+        left:1445px;
+        position: absolute;
+        top:35px;
+        height: 25px;
+        width: 100px;
+    }
+    .btn3{
+        left:1445px;
+        position: absolute;
+        top:70px;
+        height: 25px;
+        width: 100px;
+    }
+    .form{
+        left:1445px;
+        position: absolute;
+        top:110px;
+        height: 100%;
+        width: 110px;
+    }
+    .img{
+        left:1450px;
+        position: absolute;
+        top:200px;
+        height: 473px;
+        width: 633px;
+    }
+    .info{
+        top:730px;
+        width: 1440px;
+        position: absolute;
+
+    }
+    .attackinfo{
+        padding: 2px 20px;
+        position: relative;
+        background-color:#F58F8F;
+
+    }
+    .satinfo{
+        padding: 2px 20px;
+        position: relative;
+        background-color:#98E298;
+    }
+
+</style>
+
+<body>
+<div style="display:none;">
+    <img id="weixing" src="卫星.png" width="0" height="0">
+    <img id="attack" src="攻击卫星.png" width="0" height="0">
+</div>
+<div align="center" class="father">
+    <canvas id="myCanvas" width="1440" height="720" class="canvas" style="border:0px solid #c3c3c3;">
+    </canvas>
+    <img src="bg.png" class="canvas_bgp">
+    <button id="btnStart" class="btn1" onclick="selectMod()">开始</button>
+    <button id="btnRestart" class="btn2" onclick="clean()" >重新开始</button>
+    <button id="btnJump" class="btn3" onclick="window.location.href='test.html'">运动展示界面</button>
+    <form class="form">
+        <select id="attackMod" >
+            <option value=2>Fake Hello</option>
+            <option value=1>Drop Hello</option>
+            <option value=3>Fake LSU</option>
+            <option value=4>Amend LSU</option>
+            <option value=5>Delay LSU</option>
+        </select>
+        <input type="radio" name="mod" value="safe" >有路由保护<br>
+        <input type="radio" name="mod" value="unsafe" checked="true">无路由保护
+    </form>
+</div>
+<div class="info" id="Info" style="display: none">
+    <div class="attackinfo" id="AttInfo" style="display: none">
+        <strong id="AttTitle"></strong>
+        <p><a id="exp1"></a><strong id="con1"></strong></p>
+        <p><a id="exp2"></a><strong id="con2"></strong></p>
+    </div>
+    <div class="satinfo" id="SatInfo" style="display: none">
+        <strong id="SatTitle"></strong>
+        <p id="shuoming"></p>
+        <p><a id="exp3"></a><strong id="con3"></strong></p>
+        <p><a id="exp4"></a><strong id="con4"></strong></p>
+    </div>
+</div>
+    <img src="FakeHello.png" class="img" style="display: none" id="showResult">
+
+
+
+<script type="text/javascript">
+
+    function getPosition(t,n) {
+        var rawFile = new XMLHttpRequest();
+        var str = "";
+        var numLine = 200 * (n - 1) + t;
+        //var f=fso.OpenTextFile("C:\\Users\\76512\\Desktop\\topoData.txt");
+        rawFile.open("GET", "topoData.txt", false);
+        rawFile.onreadystatechange = function () {
+            if (rawFile.readyState === 4) {
+                if (rawFile.status === 200 || rawFile.status == 0) {
+                    var allText = rawFile.responseText;
+                    var temp = allText.split("\n");
+                    var tempLine = temp[numLine - 1];
+                    str = tempLine.split(" ");
+                    /*for(var i=0;i<tempLineSplit.length;i++){
+                        str+=tempLineSplit[i]+"&nbsp;";
+                    }
+                    str+="<br>";*/
+                }
+            }
+        }
+        rawFile.send(null);
+        return str;
+    }
+
+    function getSafeMOd()
+    {
+        var radio=document.getElementsByName("mod")
+        if(radio[0].checked)
+            safe=true;
+        else
+            safe=false;
+    }
+
+    function clean()
+    {
+        //重新初始化各种指标 flag
+        InfoDisplay.style.display="none";
+        AttInfoDis.style.display="none";
+        SatInfoDis.style.display="none";
+        drawCanvas(1,0);
+        step=1;
+        selectMod();
+        resultImg.style.display="none";
+        animationStop=0;
+        alertFlag=0;
+    }
+
+    function selectMod(){
+        var myselect=document.getElementById("attackMod");
+        var index=myselect.selectedIndex;
+        var Mod=myselect.options[index].value;
+        getSafeMOd();
+        switch (Number(Mod))
+        {
+            case 1:
+                DropHello();
+                break;
+            case 2:
+                FakeHello();
+                break;
+            case 3:
+                FakeLSU();
+                break;
+            case 4:
+                AmendLSU();
+                break;
+            case 5:
+                DelayLSU();
+                break;
+        }
+    }
+
+    var c=document.getElementById("myCanvas");
+    var cxt=c.getContext("2d");
+    var stImg=document.getElementById("weixing");
+    var attackImg=document.getElementById("attack")
+    var t=1;
+
+    var step=1;
+    var safe=true;
+
+    var speed=2;
+
+    var resultImg=document.getElementById("showResult")
+
+    var InfoDisplay=document.getElementById("Info")
+    var AttInfoDis=document.getElementById("AttInfo")
+    var SatInfoDis=document.getElementById("SatInfo")
+
+    var stPostion=new Array();
+    for (var i=1;i<49;i++)
+    {
+        var temp=getPosition(1,i);
+        stPostion[3*(i-1)]=Number(temp[0]);
+        stPostion[3*(i-1)+1]=Number(temp[1]);
+        stPostion[3*(i-1)+2]=Number(temp[2]);
+    }
+
+    stImg.addEventListener('load', e => {
+        //ctx.drawImage(image, 33, 71, 104, 124, 21, 20, 87, 104);
+        cxt.drawImage(stImg,720+stPostion[1]*4-15,360-(stPostion[0]*4)-15,30,30);//1
+        cxt.drawImage(stImg,720+stPostion[4]*4-15,360-(stPostion[3]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[7]*4-15,360-(stPostion[6]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[10]*4-15,360-(stPostion[9]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[13]*4-15,360-(stPostion[12]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[16]*4-15,360-(stPostion[15]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[19]*4-15,360-(stPostion[18]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[22]*4-15,360-(stPostion[21]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[25]*4-15,360-(stPostion[24]*4)-15,30,30);//9
+        cxt.drawImage(stImg,720+stPostion[28]*4-15,360-(stPostion[27]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[31]*4-15,360-(stPostion[30]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[34]*4-15,360-(stPostion[33]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[37]*4-15,360-(stPostion[36]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[40]*4-15,360-(stPostion[39]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[43]*4-15,360-(stPostion[42]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[46]*4-15,360-(stPostion[45]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[49]*4-15,360-(stPostion[48]*4)-15,30,30);//17
+        cxt.drawImage(stImg,720+stPostion[52]*4-15,360-(stPostion[51]*4)-15,30,30);//18
+        cxt.drawImage(stImg,720+stPostion[55]*4-15,360-(stPostion[54]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[58]*4-15,360-(stPostion[57]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[61]*4-15,360-(stPostion[60]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[64]*4-15,360-(stPostion[63]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[67]*4-15,360-(stPostion[66]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[70]*4-15,360-(stPostion[69]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[73]*4-15,360-(stPostion[72]*4)-15,30,30);//25
+        cxt.drawImage(stImg,720+stPostion[76]*4-15,360-(stPostion[75]*4)-15,30,30);//26
+        cxt.drawImage(stImg,720+stPostion[79]*4-15,360-(stPostion[78]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[82]*4-15,360-(stPostion[81]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[85]*4-15,360-(stPostion[84]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[88]*4-15,360-(stPostion[87]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[91]*4-15,360-(stPostion[90]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[94]*4-15,360-(stPostion[93]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[97]*4-15,360-(stPostion[96]*4)-15,30,30);//33
+        cxt.drawImage(stImg,720+stPostion[100]*4-15,360-(stPostion[99]*4)-15,30,30);//34
+        cxt.drawImage(stImg,720+stPostion[103]*4-15,360-(stPostion[102]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[106]*4-15,360-(stPostion[105]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[109]*4-15,360-(stPostion[108]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[112]*4-15,360-(stPostion[111]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[115]*4-15,360-(stPostion[114]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[118]*4-15,360-(stPostion[117]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[121]*4-15,360-(stPostion[120]*4)-15,30,30);//43
+        cxt.drawImage(stImg,720+stPostion[124]*4-15,360-(stPostion[123]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[127]*4-15,360-(stPostion[126]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[130]*4-15,360-(stPostion[129]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[133]*4-15,360-(stPostion[132]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[136]*4-15,360-(stPostion[135]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[139]*4-15,360-(stPostion[138]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[142]*4-15,360-(stPostion[141]*4)-15,30,30);
+
+    });
+
+    //攻击卫星连线
+    //setlinedash
+    /*for(var i=0;i<7;i++){
+        cxt.beginPath();
+        cxt.setLineDash([5,5]);
+        cxt.moveTo((720+stPostion[1+3*i]*4-15+720+stPostion[4+3*i]*4-15)/2-10,(360-(stPostion[0+3*i]*4)-15+360-(stPostion[3+3*i]*4)-15)/2-10);
+        cxt.lineTo(720+stPostion[1+3*i]*4,360-(stPostion[0+3*i]*4));
+        cxt.moveTo((720+stPostion[1+3*i]*4-15+720+stPostion[4+3*i]*4-15)/2-10,(360-(stPostion[0+3*i]*4)-15+360-(stPostion[3+3*i]*4)-15)/2-10);
+        cxt.lineTo(720+stPostion[4+3*i]*4,360-(stPostion[3+3*i]*4));
+        cxt.strokeStyle="#CD3333";
+        cxt.lineWidth=2;
+        cxt.stroke();
+        cxt.setLineDash([5,0]);
+        cxt.closePath();
+    }
+
+    */
+
+
+    /*cxt.beginPath();
+     cxt.setLineDash([5,5]);
+     cxt.moveTo((720+stPostion[22]*4-15+720+stPostion[1]*4-15)/2-10,(360-(stPostion[21]*4)-15+360-(stPostion[0]*4)-15)/2-10);
+     cxt.lineTo(720+stPostion[1]*4,360-(stPostion[0]*4));
+     cxt.moveTo((720+stPostion[22]*4-15+720+stPostion[1]*4-15)/2-10,(360-(stPostion[21]*4)-15+360-(stPostion[0]*4)-15)/2-10);
+     cxt.lineTo(720+stPostion[22]*4,360-(stPostion[21]*4));
+     cxt.strokeStyle="#CD3333";
+     cxt.lineWidth=2;
+     cxt.stroke();
+     cxt.setLineDash([5,0]);
+
+    //模拟攻击连线
+    cxt.beginPath();
+    cxt.setLineDash([5,5]);
+    cxt.moveTo(720+stPostion[76]*4,360-(stPostion[75]*4));
+    cxt.lineTo(720+stPostion[100]*4,360-(stPostion[99]*4));
+    cxt.strokeStyle="#CD3333";
+    cxt.lineWidth=2;
+    cxt.stroke();
+    cxt.setLineDash([5,0]);*/
+    //标序号
+    for(var i=1;i<49;i++)
+    {
+        //var strPostion=getPosition(1,i);
+        var latitude=stPostion[3*(i-1)];
+        var longitude=stPostion[3*(i-1)+1];
+        var stDirection=stPostion[3*(i-1)+2];
+
+        cxt.beginPath();
+        cxt.fillStyle="#00FF00";
+        //cxt.arc(720+longitude*4,360-(latitude*4),8,0,Math.PI*2,true);
+        //cxt.drawImage(stImg,720+longitude*4,360-(latitude*4),30,30);
+        cxt.font="bolder 15px Arial";
+        cxt.fillText(i,720+longitude*4-28,360-latitude*4);//卫星编号
+        cxt.fill();
+        cxt.closePath();
+
+    }
+    //画环
+    for(var i=1;i<7;i++)
+    {
+        cxt.beginPath();
+        cxt.moveTo(720+stPostion[24*(i-1)+1]*4,360-(stPostion[24*(i-1)]*4));
+        for(var j=1;j<8;j++)
+        {
+            cxt.lineTo(720 + stPostion[24 * (i - 1) + 1+j*3] * 4, 360 - (stPostion[24 * (i - 1)+j*3] * 4));
+        }
+        cxt.closePath();
+        cxt.strokeStyle="#FFCC00";
+        cxt.lineWidth=2;
+        cxt.stroke();
+    }
+    //环之间的连接
+    for(var i=1;i<6;i++)
+    {
+        for(var j=0;j<8;j++)
+        {
+
+            cxt.beginPath();
+            cxt.moveTo(720+stPostion[24*(i-1)+1+j*3]*4,360-(stPostion[24*(i-1)+j*3]*4));
+            cxt.lineTo(720+stPostion[24*i+1+j*3]*4,360-(stPostion[24*i+j*3]*4));
+            cxt.closePath();
+            cxt.strokeStyle="#FFCC00";
+            cxt.lineWidth=2;
+            cxt.stroke();
+        }
+    }
+    //画箭头
+
+    /*
+
+    arrow((720+stPostion[76]*4+720+stPostion[100]*4)/2,(360-(stPostion[75]*4)+360-(stPostion[99]*4))/2,720+stPostion[76]*4,360-(stPostion[75]*4),1);
+
+    arrow((720+stPostion[76]*4+720+stPostion[100]*4)/2,(360-(stPostion[75]*4)+360-(stPostion[99]*4))/2,720+stPostion[100]*4,360-(stPostion[99]*4),1);
+
+
+
+    cxt.beginPath();
+    cxt.moveTo(720+stPostion[1]*4,360-(stPostion[0]*4))
+    cxt.lineTo(720+stPostion[4]*4,360-(stPostion[3]*4))
+    cxt.strokeStyle="#00FF00";
+    cxt.lineWidth=2.1;
+    cxt.stroke();
+    cxt.closePath();
+
+
+    */
+    /*document.getElementById("time").innerHTML=t;
+    var btn = document.getElementById("btn");
+    btn.addEventListener('click',function(){
+        //alert("hello wrold");
+        t=changeTime(t,10);
+        document.getElementById("time").innerHTML=t;
+        drawCanvas(t);
+    },false)
+     */
+
+    function updateCanvas() {
+        t=changeTime(t,1);
+        document.getElementById("time").innerHTML=t;
+        drawCanvas(t,0);
+    }
+
+    function changeTime(t,step) {
+        t=t+step;
+        return t;
+    }
+    //画箭头
+    //ArrDi=1 为攻击卫星发包 ArrDi=0则为攻击卫星接收包；1为卫攻击卫星，2为普通卫星
+    function arrow(x1,y1,x2,y2,ArrDi,Color) {
+        cxt.save();
+        cxt.translate((x1+x2)/2,(y1+y2)/2);
+        var ang= ((x2-x1)/(y2-y1));
+        ang=Math.atan(ang);
+        if(y2-y1>=0&&ArrDi==1)
+        {
+            cxt.rotate(-ang);
+        }
+        if(y2-y1<0&&ArrDi==1)
+        {
+            cxt.rotate(Math.PI-ang);
+        }
+        if(y2-y1>=0&&ArrDi==0)
+        {
+            cxt.rotate(Math.PI-ang);
+        }
+        if(y2-y1<0&&ArrDi==0)
+        {
+            cxt.rotate(-ang);
+        }
+        cxt.beginPath();
+        cxt.lineTo(-8,-16);
+        cxt.lineTo(0,-12);
+        cxt.lineTo(8,-16);
+        cxt.lineTo(0,0);
+        if(Color==0)
+            cxt.fillStyle="#CD3333";
+        else
+            cxt.fillStyle="#00FF00";
+        cxt.fill()
+        //cxt.stroke();
+        cxt.closePath();
+        cxt.translate(0,0);
+        cxt.restore();
+    }
+
+    function drawCanvasPart(down){
+        //清空画布
+        cxt.clearRect(0,0,c.width,c.height);
+        //画卫星图像
+        cxt.drawImage(stImg,720+stPostion[1]*4-15,360-(stPostion[0]*4)-15,30,30);//1
+        cxt.drawImage(stImg,720+stPostion[4]*4-15,360-(stPostion[3]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[7]*4-15,360-(stPostion[6]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[10]*4-15,360-(stPostion[9]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[13]*4-15,360-(stPostion[12]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[16]*4-15,360-(stPostion[15]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[19]*4-15,360-(stPostion[18]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[22]*4-15,360-(stPostion[21]*4)-15,30,30);
+
+        //标序号
+        for(var i=1;i<9;i++)
+        {
+            //var strPostion=getPosition(1,i);
+            var latitude=stPostion[3*(i-1)];
+            var longitude=stPostion[3*(i-1)+1];
+            var stDirection=stPostion[3*(i-1)+2];
+
+            cxt.beginPath();
+            cxt.fillStyle="#00FF00";
+            //cxt.arc(720+longitude*4,360-(latitude*4),8,0,Math.PI*2,true);
+            //cxt.drawImage(stImg,720+longitude*4,360-(latitude*4),30,30);
+            cxt.font="bolder 15px Arial";
+            cxt.fillText(i,720+longitude*4-28,360-latitude*4);//卫星编号
+            cxt.fill();
+            cxt.closePath();
+        }
+        //连线
+        if(down==1)
+        {
+            cxt.beginPath();
+            cxt.moveTo(720+stPostion[10]*4,360-(stPostion[9]*4));
+            for(var j=4;j<8;j++)
+            {
+                cxt.lineTo(720 + stPostion[ 1+j*3] * 4, 360 - (stPostion[j*3] * 4));
+            }
+            //cxt.closePath();
+            cxt.strokeStyle="#FFCC00";
+            cxt.lineWidth=2;
+            cxt.stroke();
+            cxt.moveTo(720+stPostion[1]*4,360-(stPostion[0]*4));
+            cxt.lineTo(720+stPostion[22]*4,360-(stPostion[21]*4));
+            cxt.lineTo(720+stPostion[4]*4,360-(stPostion[3]*4));
+            cxt.lineTo(720+stPostion[7]*4,360-(stPostion[6]*4));
+            cxt.stroke();
+        }
+        else
+        {
+            cxt.beginPath();
+            cxt.moveTo(720+stPostion[1]*4,360-(stPostion[0]*4));
+            for(var j=1;j<8;j++)
+            {
+                cxt.lineTo(720 + stPostion[ 1+j*3] * 4, 360 - (stPostion[j*3] * 4));
+            }
+            cxt.closePath();
+            cxt.strokeStyle="#FFCC00";
+            cxt.lineWidth=2;
+            cxt.stroke();
+            }
+    }
+
+    function drawCanvas(t,down) {
+        //清空画布
+        cxt.clearRect(0,0,c.width,c.height);
+        //更新位置数组
+        for (var i=1;i<49;i++)
+        {
+            var temp=getPosition(t,i);
+            stPostion[3*(i-1)]=Number(temp[0]);
+            stPostion[3*(i-1)+1]=Number(temp[1]);
+            stPostion[3*(i-1)+2]=Number(temp[2]);
+        }
+        //画卫星图像
+        cxt.drawImage(stImg,720+stPostion[1]*4-15,360-(stPostion[0]*4)-15,30,30);//1
+        cxt.drawImage(stImg,720+stPostion[4]*4-15,360-(stPostion[3]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[7]*4-15,360-(stPostion[6]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[10]*4-15,360-(stPostion[9]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[13]*4-15,360-(stPostion[12]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[16]*4-15,360-(stPostion[15]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[19]*4-15,360-(stPostion[18]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[22]*4-15,360-(stPostion[21]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[25]*4-15,360-(stPostion[24]*4)-15,30,30);//9
+        cxt.drawImage(stImg,720+stPostion[28]*4-15,360-(stPostion[27]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[31]*4-15,360-(stPostion[30]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[34]*4-15,360-(stPostion[33]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[37]*4-15,360-(stPostion[36]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[40]*4-15,360-(stPostion[39]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[43]*4-15,360-(stPostion[42]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[46]*4-15,360-(stPostion[45]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[49]*4-15,360-(stPostion[48]*4)-15,30,30);//17
+        cxt.drawImage(stImg,720+stPostion[52]*4-15,360-(stPostion[51]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[55]*4-15,360-(stPostion[54]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[58]*4-15,360-(stPostion[57]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[61]*4-15,360-(stPostion[60]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[64]*4-15,360-(stPostion[63]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[67]*4-15,360-(stPostion[66]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[70]*4-15,360-(stPostion[69]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[73]*4-15,360-(stPostion[72]*4)-15,30,30);//25
+        cxt.drawImage(stImg,720+stPostion[76]*4-15,360-(stPostion[75]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[79]*4-15,360-(stPostion[78]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[82]*4-15,360-(stPostion[81]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[85]*4-15,360-(stPostion[84]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[88]*4-15,360-(stPostion[87]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[91]*4-15,360-(stPostion[90]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[94]*4-15,360-(stPostion[93]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[97]*4-15,360-(stPostion[96]*4)-15,30,30);//33
+        cxt.drawImage(stImg,720+stPostion[100]*4-15,360-(stPostion[99]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[103]*4-15,360-(stPostion[102]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[106]*4-15,360-(stPostion[105]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[109]*4-15,360-(stPostion[108]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[112]*4-15,360-(stPostion[111]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[115]*4-15,360-(stPostion[114]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[118]*4-15,360-(stPostion[117]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[121]*4-15,360-(stPostion[120]*4)-15,30,30);//43
+        cxt.drawImage(stImg,720+stPostion[124]*4-15,360-(stPostion[123]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[127]*4-15,360-(stPostion[126]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[130]*4-15,360-(stPostion[129]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[133]*4-15,360-(stPostion[132]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[136]*4-15,360-(stPostion[135]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[139]*4-15,360-(stPostion[138]*4)-15,30,30);
+        cxt.drawImage(stImg,720+stPostion[142]*4-15,360-(stPostion[141]*4)-15,30,30);
+
+        //标序号
+        for(var i=1;i<49;i++)
+        {
+            //var strPostion=getPosition(1,i);
+            var latitude=stPostion[3*(i-1)];
+            var longitude=stPostion[3*(i-1)+1];
+            var stDirection=stPostion[3*(i-1)+2];
+
+            cxt.beginPath();
+            cxt.fillStyle="#00FF00";
+            //cxt.arc(720+longitude*4,360-(latitude*4),8,0,Math.PI*2,true);
+            //cxt.drawImage(stImg,720+longitude*4,360-(latitude*4),30,30);
+            cxt.font="bolder 15px Arial";
+            cxt.fillText(i,720+longitude*4-28,360-latitude*4);//卫星编号
+            cxt.fill();
+            cxt.closePath();
+        }
+        //画环
+        for(var i=1;i<7;i++)
+        {
+            if(down==1&&i==1)
+            {
+                cxt.beginPath();
+                cxt.moveTo(720+stPostion[4]*4,360-(stPostion[3]*4));
+                for(var j=2;j<8;j++)
+                {
+                    cxt.lineTo(720 + stPostion[ 1+j*3] * 4, 360 - (stPostion[j*3] * 4));
+                }
+                //cxt.closePath();
+                cxt.strokeStyle="#FFCC00";
+                cxt.lineWidth=2;
+                cxt.stroke();
+                cxt.moveTo(720+stPostion[1]*4,360-(stPostion[0]*4));
+                cxt.lineTo(720+stPostion[22]*4,360-(stPostion[21]*4));
+                cxt.stroke();
+            }
+            else
+            {
+                cxt.beginPath();
+                cxt.moveTo(720+stPostion[24*(i-1)+1]*4,360-(stPostion[24*(i-1)]*4));
+                for(var j=1;j<8;j++)
+                {
+                    cxt.lineTo(720 + stPostion[24 * (i - 1) + 1+j*3] * 4, 360 - (stPostion[24 * (i - 1)+j*3] * 4));
+                }
+                cxt.closePath();
+                cxt.strokeStyle="#FFCC00";
+                cxt.lineWidth=2;
+                cxt.stroke();
+            }
+        }
+        //环之间的连接
+        for(var i=1;i<6;i++)
+        {
+            for(var j=0;j<8;j++)
+            {
+                cxt.beginPath();
+                cxt.moveTo(720+stPostion[24*(i-1)+1+j*3]*4,360-(stPostion[24*(i-1)+j*3]*4));
+                cxt.lineTo(720+stPostion[24*i+1+j*3]*4,360-(stPostion[24*i+j*3]*4));
+                cxt.closePath();
+                cxt.strokeStyle="#FFCC00";
+                cxt.lineWidth=2;
+                cxt.stroke();
+            }
+        }
+    }
+
+    var listenFlag={value:0};
+    // listenFlagDown={"value":0};
+    //var listenFlagRight={"value":0};
+
+    function LSUposUp(i){
+        i--;
+        let pointUp=[
+            [720+stPostion[1+3*i]*4,360-(stPostion[3*i]*4)],
+            [720+stPostion[4+3*i]*4,360-(stPostion[3+3*i]*4)]
+        ]
+        return pointUp;
+    }
+
+    function LSUposRight(i){
+        i--;
+        let pointRight=[
+            [720+stPostion[1+3*i]*4,360-(stPostion[3*i]*4)],
+            [720+stPostion[1+3*(i+8)]*4,360-(stPostion[3*(i+8)]*4)]
+        ]
+        return pointRight;
+    }
+
+    function LSUposDown(i){
+        if (i%8==1) {
+            i--;
+            var pointDown_=[
+                [720+stPostion[1+3*i]*4,360-(stPostion[3*i]*4)],
+                [720+stPostion[1+3*(i+7)]*4,360-(stPostion[3*(i+7)]*4)]
+            ]
+        }
+        else {
+            i--;
+            var pointDown_=[
+                [720+stPostion[1+3*i]*4,360-(stPostion[3*i]*4)],
+                [720+stPostion[1+3*(i-1)]*4,360-(stPostion[3*(i-1)]*4)]
+            ]
+        }
+        return pointDown_;
+    }
+
+    var NONE=false;
+    var UP=true;
+    var RIGHT=true;
+    var DOWN=true;
+
+//洪泛时，卫星状态数组，防止重复画。
+    var satSate=new Array();
+    satSate.length=48;
+    satSate.fill(0);
+
+    alert(satSate[1]);
+
+    var currentSat=1;//当前动画开始的卫星
+
+    var animationStop=0;//动画停止的状态变量，0为不停止，1为停止。
+
+    function AnimateLine(points,dir,current){
+        //alert("ok")
+        //document.getElementById("btnStart").disable=true;
+        lineMove(points,dir,current);
+    }
+    var currentSatUp=1;
+    var currentSatRight=1;
+    var currentSatDown=1;
+    var current_=1;
+    var alertFlag=0;
+
+    function lineMove(points,dir,current) {
+        if(animationStop==1){
+            return ;
+        }
+        else if (points.length < 2) {
+            //document.getElementById("btnStart").disable=false
+            //alert(flag)
+            //alert(small)
+            if(NONE){
+                //alert("LSU包洪泛已完成");
+                return ;
+            }
+
+            else {
+                satSate[current-1]=1;
+                //alert(satSate.toString());
+                //alert(dir)
+                switch (dir){
+                    case 1:
+                        current++;
+                        currentSat=current;
+                        //alert("Up to"+current)
+                        //alert(currentSat+444)
+                        /*
+                       */
+                        break;
+                    case 2:
+                        current+=8;
+                        currentSat=current;
+                        //alert("right to"+current)
+                        break;
+                    case 3:
+                        if(current%8==1) {
+                            current+=7;
+                        }
+                        else {
+                            current--;}
+                        currentSat=current;
+                        //alert("down to"+current)
+                        break;
+                }
+                //根据更新后的currentSat判断
+                if(satSate[currentSat-1]>0){
+                    NONE=false;
+                    UP=false;
+                    RIGHT=false;
+                    DOWN=false;
+                    //listenFlag.value++;
+                    //alert(listenFlag.value)
+                    if(satSate.every(checkSat)&&alertFlag==0){
+                        alertFlag=1;
+                        animationStop=1;
+                        alert("洪泛结束"+animationStop);
+
+                    }
+                    return;
+                }
+                else if(currentSat==48)
+                {
+                    NONE=false;
+                    UP=false;
+                    RIGHT=false;
+                    DOWN=true;
+                    listenFlag.value++;
+                    //alert(listenFlag.value)
+                    return;
+                }
+                else if(currentSat%8==0){
+                    NONE=false;
+                    UP=false;
+                    RIGHT=true;
+                    DOWN=true;
+                    listenFlag.value++;
+                    //alert(listenFlag.value)
+                    return ;
+                }
+                else if(currentSat>40){
+                    NONE=false;
+                    UP=true;
+                    RIGHT=false;
+                    DOWN=true;
+                    listenFlag.value++;
+                    //alert(listenFlag.value)
+                    return ;
+                }
+                else {
+                    NONE=false;
+                    UP=true;
+                    RIGHT=true;
+                    DOWN=true;
+                    listenFlag.value++;
+                    //alert(listenFlag.value)
+                    return ;
+                }
+            }
+        }
+
+
+        const [[x1, y1], [x2, y2]] = points;
+
+        let dx = x2 - x1;
+        let dy = y2 - y1;
+
+
+        if (Math.abs(dx) < 3 && Math.abs(dy) < 3) {
+            points = points.slice(1);
+            lineMove(points,dir,current);
+            return;
+        }
+        let x = x1,
+            y = y1; //线条绘制过程中的终点
+        if (dx === 0) {
+            (x = x2), (y += (speed * dy) / Math.abs(dy));
+        } else if (dy === 0) {
+            x += (speed * dx) / Math.abs(dx);
+            y = y2;
+        } else /*if (Math.abs(dx) >= 1) */{
+            let rate =dy/dx;
+            let rate_x=Math.cos(Math.atan(rate));
+            let rate_y=Math.sin(Math.atan(rate));
+            x += (speed * rate_x*dx) / Math.abs(dx);
+            y += (speed * rate_y * dx) / Math.abs(dx);
+        }
+        drawLine(x1, y1, x, y);
+
+        points[0] = [x, y];
+        window.requestAnimationFrame(function () {
+            lineMove(points,dir,current);
+        });
+    }
+
+    function drawLine(x1, y1, x2, y2) {
+        cxt.save();
+        cxt.beginPath(); //不写每次都会重绘上次的线
+        cxt.lineCap = "round";
+        cxt.lineJoin = "round";
+        var grd = cxt.createLinearGradient(x1, y1, x2, y2);
+        cxt.moveTo(x1, y1);
+        cxt.lineTo(x2, y2);
+        cxt.closePath();
+        cxt.strokeStyle = "#00FF00";
+        cxt.lineWidth=2.5;
+        cxt.stroke();
+        cxt.restore();
+    }
+
+
+    function smallFlowLSU() {
+        var points=[
+            [720+stPostion[1]*4,360-(stPostion[0]*4)],
+            [720+stPostion[25]*4,360-(stPostion[24]*4)],
+            [720+stPostion[28]*4,360-(stPostion[27]*4)],
+            [720+stPostion[4]*4,360-(stPostion[3]*4)]
+        ]
+
+        const points2=[
+            [720+stPostion[1]*4,360-(stPostion[0]*4)],
+            [720+stPostion[22]*4,360-(stPostion[21]*4)],
+            [720+stPostion[46]*4,360-(stPostion[45]*4)],
+            [720+stPostion[25]*4,360-(stPostion[24]*4)]
+        ]
+
+        /*
+        */
+
+        NONE=true;
+        UP=false;
+        RIGHT=false;
+        DOWN=false;
+        AnimateLine(points,0,1);
+    }
+
+    function planeLSU(i){
+        switch (i)
+        {
+            case 1:
+                //第一次洪泛3->4 以及4->3
+                LSUFirst();
+                break;
+            case 2:
+                LSUSecond();
+                break;
+            case 3:
+                LSUThird();
+                break;
+        }
+
+    }
+    function LSUFirst(){
+        var pointFirst1=[
+            [720+stPostion[7]*4,360-(stPostion[6]*4)],
+            [720+stPostion[4]*4,360-(stPostion[3]*4)],
+            [720+stPostion[1]*4,360-(stPostion[0]*4)],
+            [720+stPostion[22]*4,360-(stPostion[21]*4)],
+            [720+stPostion[19]*4,360-(stPostion[18]*4)]
+            //[720+stPostion[16]*4,360-(stPostion[15]*4)],
+            //[720+stPostion[13]*4,360-(stPostion[12]*4)],
+            //[720+stPostion[10]*4,360-(stPostion[9]*4)]
+        ]
+        var pointFirst2=[
+            [720+stPostion[10]*4,360-(stPostion[9]*4)],
+            [720+stPostion[13]*4,360-(stPostion[12]*4)],
+            [720+stPostion[16]*4,360-(stPostion[15]*4)],
+            [720+stPostion[19]*4,360-(stPostion[18]*4)],
+            [720+stPostion[22]*4,360-(stPostion[21]*4)]
+            //[720+stPostion[1]*4,360-(stPostion[0]*4)],
+           // [720+stPostion[4]*4,360-(stPostion[3]*4)],
+            //[720+stPostion[7]*4,360-(stPostion[6]*4)]
+        ]
+        NONE=true;
+        UP=false;
+        RIGHT=false;
+        DOWN=false;
+        AnimateLine(pointFirst1,0,1);
+        AnimateLine(pointFirst2,0,1);
+    }
+    function LSUSecond(){
+        var pointSecond1=[
+            [720+stPostion[7]*4,360-(stPostion[6]*4)],
+            [720+stPostion[4]*4,360-(stPostion[3]*4)],
+            [720+stPostion[1]*4,360-(stPostion[0]*4)],
+            [720+stPostion[22]*4,360-(stPostion[21]*4)],
+            [720+stPostion[19]*4,360-(stPostion[18]*4)],
+            //[720+stPostion[16]*4,360-(stPostion[15]*4)],
+            //[720+stPostion[13]*4,360-(stPostion[12]*4)],
+            //[720+stPostion[10]*4,360-(stPostion[9]*4)]
+        ]
+        var pointSecond2=[
+            [720+stPostion[10]*4,360-(stPostion[9]*4)],
+            [720+stPostion[13]*4,360-(stPostion[12]*4)],
+            [720+stPostion[16]*4,360-(stPostion[15]*4)],
+            [720+stPostion[19]*4,360-(stPostion[18]*4)],
+            [720+stPostion[22]*4,360-(stPostion[21]*4)],
+            //[720+stPostion[1]*4,360-(stPostion[0]*4)],
+            //[720+stPostion[4]*4,360-(stPostion[3]*4)],
+            //[720+stPostion[7]*4,360-(stPostion[6]*4)]
+        ]
+        var pointSecond3=[
+            [720+stPostion[7]*4,360-(stPostion[6]*4)],
+            [720+stPostion[10]*4,360-(stPostion[9]*4)]
+        ]
+        var pointSecond4=[
+            [720+stPostion[10]*4,360-(stPostion[9]*4)],
+            [720+stPostion[7]*4,360-(stPostion[6]*4)]
+        ]
+        NONE=true;
+        UP=false;
+        RIGHT=false;
+        DOWN=false;
+        AnimateLine(pointSecond1,0,1);
+        AnimateLine(pointSecond2,0,1);
+        AnimateLine(pointSecond3,0,1);
+        AnimateLine(pointSecond4,0,1);
+    }
+    function LSUThird(){
+        var pointThird1=[
+
+            [720+stPostion[1]*4,360-(stPostion[0]*4)],
+            [720+stPostion[22]*4,360-(stPostion[21]*4)],
+            [720+stPostion[19]*4,360-(stPostion[18]*4)],
+            [720+stPostion[16]*4,360-(stPostion[15]*4)],
+            [720+stPostion[13]*4,360-(stPostion[12]*4)],
+            [720+stPostion[10]*4,360-(stPostion[9]*4)],
+            //[720+stPostion[7]*4,360-(stPostion[6]*4)],
+            //[720+stPostion[4]*4,360-(stPostion[3]*4)]
+        ]
+        var pointThird2=[
+            [720+stPostion[1]*4,360-(stPostion[0]*4)],
+            [720+stPostion[4]*4,360-(stPostion[3]*4)],
+            [720+stPostion[7]*4,360-(stPostion[6]*4)],
+            [720+stPostion[10]*4,360-(stPostion[9]*4)]
+            //[720+stPostion[13]*4,360-(stPostion[12]*4)],
+            //[720+stPostion[16]*4,360-(stPostion[15]*4)],
+            //[720+stPostion[19]*4,360-(stPostion[18]*4)],
+            //[720+stPostion[22]*4,360-(stPostion[21]*4)]
+        ]
+        NONE=true;
+        UP=false;
+        RIGHT=false;
+        DOWN=false;
+        AnimateLine(pointThird1,0,1);
+        AnimateLine(pointThird2,0,1);
+    }
+
+    function checkSat(val) {
+        return val>0;
+    }
+
+    function  flowLSU(down){
+        //动画展示
+        NONE=false;
+        UP=true;
+        RIGHT=true;
+        DOWN=true;
+
+        satSate.fill(0);//初始化卫星状态数组
+
+
+        let pointsUp=LSUposUp(1);
+        let pointsRight=LSUposRight(1);
+        let pointsDown=LSUposDown(1);
+
+        //
+        AnimateLine(pointsRight,2,1);
+        AnimateLine(pointsDown,3,1);
+
+        if(down==1){
+            let pointsUp2=LSUposUp(2);
+            let pointsRight2=LSUposRight(2);
+            let pointsDown2=LSUposDown(2);
+            AnimateLine(pointsUp2,1,2);
+            AnimateLine(pointsRight2,2,2);
+        }
+        else {
+            AnimateLine(pointsUp,1,1);
+        }
+
+        Object.defineProperty(listenFlag,'value',{
+            get: function (value) {
+                // get 和 set 方法
+                return value;
+            },
+            set: function (value) {
+                //alert("现在是"+currentSat);
+                //alert(UP);
+                //alert(RIGHT);
+                //alert(DOWN);
+                if(down==1&&currentSat==2)
+                {
+                    NONE=false;
+                    UP=true;
+                    RIGHT=true;
+                    DOWN=false;
+                }
+                if(UP){
+                    //alert("up from"+currentSat)
+                    pointsUp=LSUposUp(currentSat);
+                    AnimateLine(pointsUp,1,currentSat);
+                }
+                if(RIGHT){
+                    pointsRight=LSUposRight(currentSat);
+                    AnimateLine(pointsRight,2,currentSat);
+                }
+                if(DOWN){
+                    pointsDown=LSUposDown(currentSat);
+                    AnimateLine(pointsDown,3,currentSat);
+                }
+                //alert("画后的"+currentSat);
+                // 当listenMenuTree 的value值发生改变时，触发set函数的内容
+
+            }
+        });
+
+        //画环
+        /*for(var i=1;i<7;i++)
+        {
+            if(i==1)
+            {
+                cxt.beginPath();
+                cxt.moveTo(720+stPostion[4]*4,360-(stPostion[3]*4));
+                for(var j=2;j<8;j++)
+                {
+                    cxt.lineTo(720 + stPostion[ 1+j*3] * 4, 360 - (stPostion[j*3] * 4));
+                }
+                //cxt.closePath();
+                cxt.strokeStyle="#00FF00";
+                cxt.lineWidth=2;
+                cxt.stroke();
+                cxt.moveTo(720+stPostion[1]*4,360-(stPostion[0]*4));
+                cxt.lineTo(720+stPostion[22]*4,360-(stPostion[21]*4));
+                cxt.stroke();
+            }
+            else
+            {
+                cxt.beginPath();
+                cxt.moveTo(720+stPostion[24*(i-1)+1]*4,360-(stPostion[24*(i-1)]*4));
+                for(var j=1;j<8;j++)
+                {
+                    cxt.lineTo(720 + stPostion[24 * (i - 1) + 1+j*3] * 4, 360 - (stPostion[24 * (i - 1)+j*3] * 4));
+                }
+                cxt.closePath();
+                cxt.strokeStyle="#00FF00";
+                cxt.lineWidth=2;
+                cxt.stroke();
+            }
+        }
+        //环之间的连接
+        for(var i=1;i<6;i++)
+        {
+            for(var j=0;j<8;j++)
+            {
+                cxt.beginPath();
+                cxt.moveTo(720+stPostion[24*(i-1)+1+j*3]*4,360-(stPostion[24*(i-1)+j*3]*4));
+                cxt.lineTo(720+stPostion[24*i+1+j*3]*4,360-(stPostion[24*i+j*3]*4));
+                cxt.closePath();
+                cxt.strokeStyle="#00FF00";
+                cxt.lineWidth=2.5;
+                cxt.stroke();
+            }
+        }*/
+    }
+
+    function DropHello(){
+        switch (step)
+        {
+            case 1:
+                if(safe)
+                    alert("DropHello,有路由保护");
+                else
+                    alert("DropHello,无路由保护");
+                break;
+            case 2:
+            {//攻击卫星
+                cxt.drawImage(attackImg,(720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-25,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-25,30,30);//1-2
+                cxt.beginPath();
+                cxt.setLineDash([5,5]);
+                cxt.moveTo((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10);
+                cxt.lineTo(720+stPostion[1]*4,360-(stPostion[0]*4));
+                cxt.moveTo((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10);
+                cxt.lineTo(720+stPostion[4]*4,360-(stPostion[3]*4));
+                cxt.strokeStyle="#CD3333";
+                cxt.lineWidth=2;
+                cxt.stroke();
+                cxt.setLineDash([5,0]);
+                cxt.closePath();
+                arrow((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10,720+stPostion[1]*4,360-(stPostion[0]*4),0,0);
+                arrow((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10,720+stPostion[4]*4,360-(stPostion[3]*4),0,0);
+
+                //alert("第2步");
+                break;
+            }
+
+            case 3:
+            {
+                var mid5=(720+stPostion[1]*4+720+stPostion[4]*4)/2;
+                var mid6=(360-(stPostion[0]*4)+360-(stPostion[3]*4))/2
+                cxt.beginPath();
+                cxt.moveTo(mid5-8,mid6-8);
+                cxt.lineTo(mid5+8,mid6+8);
+                cxt.moveTo(mid5-8,mid6+8);
+                cxt.lineTo(mid5+8,mid6-8);
+                cxt.strokeStyle="#CD3333";
+                cxt.lineWidth=1.5;
+                cxt.stroke();
+                //alert("第3步");
+                break;
+            }
+
+            case 4:
+                if(safe)
+                {
+                    /*cxt.beginPath()
+                    cxt.moveTo(720+stPostion[1]*4,360-(stPostion[0]*4));
+                    cxt.lineTo(720+stPostion[25]*4,360-(stPostion[24]*4));
+                    cxt.lineTo(720+stPostion[28]*4,360-(stPostion[27]*4));
+                    cxt.lineTo(720+stPostion[4]*4,360-(stPostion[3]*4));
+                    cxt.strokeStyle="#00FF00";
+                    cxt.lineWidth=2.5;
+                    cxt.stroke();
+                    cxt.closePath();
+                    */
+                    smallFlowLSU();
+
+                    resultImg.style.display="block";
+                    resultImg.src="DropHelloSafe.png";
+                }
+                //alert("第4步");
+                else {
+                    flowLSU(1);
+                    resultImg.style.display="block";
+                    resultImg.src="DropHelloUnsafe.png";
+                }
+                break;
+
+            case 5:
+                if (safe)
+                {
+                    resultImg.style.display="block";
+                    resultImg.src="DropHello.png";
+                }
+                else alert("已结束")
+                //alert(satSate.toString())
+                break;
+            default:
+                alert("已结束");
+                break;
+        }
+        step=step+1;
+    }
+    function FakeHello(){
+        switch (step)
+        {
+            case 1:
+                if(safe)
+                    alert("FakeHello,有路由保护");
+                else
+                    alert("FakeHello,无路由保护");
+                break;
+            case 2:
+                cxt.drawImage(attackImg,(720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-25,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-25,30,30);//1-2
+                cxt.beginPath();
+                cxt.setLineDash([5,5]);
+                cxt.moveTo((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10);
+                cxt.lineTo(720+stPostion[1]*4,360-(stPostion[0]*4));
+                cxt.moveTo((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10);
+                cxt.lineTo(720+stPostion[4]*4,360-(stPostion[3]*4));
+                cxt.strokeStyle="#CD3333";
+                cxt.lineWidth=2;
+                cxt.stroke();
+                cxt.setLineDash([5,0]);
+                cxt.closePath();
+                arrow((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10,720+stPostion[1]*4,360-(stPostion[0]*4),1,0);
+                arrow((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10,720+stPostion[4]*4,360-(stPostion[3]*4),1,0);
+                //alert("第2步");
+                break;
+            case 3:
+                drawCanvas(1,1);
+                cxt.drawImage(attackImg,(720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-25,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-25,30,30);//1-2
+                cxt.beginPath();
+                cxt.setLineDash([5,5]);
+                cxt.moveTo((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10);
+                cxt.lineTo(720+stPostion[1]*4,360-(stPostion[0]*4));
+                cxt.moveTo((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10);
+                cxt.lineTo(720+stPostion[4]*4,360-(stPostion[3]*4));
+                cxt.strokeStyle="#CD3333";
+                cxt.lineWidth=2;
+                cxt.stroke();
+                cxt.setLineDash([5,0]);
+                cxt.closePath();
+                arrow((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10,720+stPostion[1]*4,360-(stPostion[0]*4),1,0);
+                arrow((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10,720+stPostion[4]*4,360-(stPostion[3]*4),1,0);
+                //alert("第3步");
+                break;
+            case 4:
+                if(safe)
+                {
+                    /*cxt.beginPath()
+                    cxt.moveTo(720+stPostion[1]*4,360-(stPostion[0]*4));
+                    cxt.lineTo(720+stPostion[25]*4,360-(stPostion[24]*4));
+                    cxt.lineTo(720+stPostion[28]*4,360-(stPostion[27]*4));
+                    cxt.lineTo(720+stPostion[4]*4,360-(stPostion[3]*4));
+                    cxt.strokeStyle="#00FF00";
+                    cxt.lineWidth=2.5;
+                    cxt.stroke();
+                    cxt.closePath();
+
+                     */
+                    flowLSU(1);
+                    resultImg.style.display="block";
+                    resultImg.src="FakeHelloSafe.png"
+                }
+                else flowLSU(1);
+
+                //alert("第4步");
+                break;
+            case 5:
+                if (safe)
+                {
+                    resultImg.style.display="block";
+                    resultImg.src="FakeHello.png"
+                }
+                else {
+                    cxt.beginPath();
+                    cxt.setLineDash([5,5]);
+                    cxt.moveTo(720+stPostion[4]*4,360-(stPostion[3]*4));
+                    cxt.lineTo(720+stPostion[1]*4,360-(stPostion[0]*4));
+                    cxt.strokeStyle="#00FF00";
+                    cxt.lineWidth=2.5;
+                    cxt.stroke();
+                    cxt.setLineDash([5,0]);
+                    cxt.closePath();
+                    //alert("第5步");
+                }
+                alert(satSate.toString())
+                break;
+            case 6:
+                if(safe)
+                {
+                    alert("已结束")
+                }
+                else
+                {
+                    resultImg.style.display="block";
+                    resultImg.src="FakeHelloUnsafe.png";
+                }
+                break;
+            default:
+                alert("已结束");
+                break;
+        }
+        step=step+1;
+    }
+    function FakeLSU(){
+        switch (step)
+        {
+            case 1:
+                if(safe)
+                    alert("FakeLSU,有路由保护");
+                else
+                    alert("FakeLSU,无路由保护");
+               // cxt.fillStyle="#C0C0C0"
+                //cxt.fillRect(1260,620,160,80);
+                break;
+            case 2:
+                cxt.drawImage(attackImg,(720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-25,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-25,30,30);//1-2
+                cxt.beginPath();
+                cxt.setLineDash([5,5]);
+                cxt.moveTo((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10);
+                cxt.lineTo(720+stPostion[1]*4,360-(stPostion[0]*4));
+                cxt.moveTo((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10);
+                cxt.lineTo(720+stPostion[4]*4,360-(stPostion[3]*4));
+                cxt.strokeStyle="#CD3333";
+                cxt.lineWidth=2;
+                cxt.stroke();
+                cxt.setLineDash([5,0]);
+                cxt.closePath();
+                arrow((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10,720+stPostion[1]*4,360-(stPostion[0]*4),1,0);
+                arrow((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10,720+stPostion[4]*4,360-(stPostion[3]*4),1,0);
+                //alert("第2步");
+
+                break;
+            case 3:
+                if(safe)
+                {
+                    alert("展示信息")
+                    InfoDisplay.style.display="block";
+                    AttInfoDis.style.display="block";
+                    SatInfoDis.style.display="block";
+
+                    document.getElementById("AttTitle").innerText="攻击卫星：";
+                    document.getElementById("exp1").innerText="伪LSU包内容：";
+                    document.getElementById("con1").innerText="30201 key:1";
+                    document.getElementById("exp2").innerText="对LSU信息做HMAC之后的结果:";
+                    document.getElementById("con2").innerText="6B86B273FF34F0E19D6B804EFF5A3F5747ADA...";
+                    document.getElementById("SatTitle").innerText="Sat1:";
+                    document.getElementById("shuoming").innerText="包传递到Sat1上，将LSU信息与本地key:200 做Hash";
+                    document.getElementById("exp3").innerText="接受到的LSU内容：";
+                    document.getElementById("con3").innerText="30201";
+                    document.getElementById("exp4").innerText="对LSU信息做HMAC之后的结果:";
+                    document.getElementById("con4").innerText="27BADC983DF1780B60C2B3FA9D3A19A00E46A...";
+
+                    resultImg.style.display="block";
+                    resultImg.src="FakeLSUSafe.png";
+                }
+                else {
+                    cxt.beginPath();
+                    cxt.setLineDash([5,5]);
+                    cxt.moveTo(720+stPostion[4]*4+5,360-(stPostion[3]*4)+5);
+                    cxt.lineTo(720+stPostion[7]*4,360-(stPostion[6]*4)+5);
+                    cxt.strokeStyle="#CD3333";
+                    cxt.lineWidth=3;
+                    cxt.stroke();
+                    cxt.setLineDash([5,0]);
+                    cxt.closePath();
+
+
+                    //cxt.fillStyle="#006400"
+                    //cxt.fillText("LSU信息包：30210",1280,640);
+                }
+                //alert("第3步");
+                break;
+            case 4:
+                if(safe)
+                {
+                    //alert("已结束，并未造成影响")
+                    resultImg.style.display="block";
+                    resultImg.src="FakeLSU.png";
+                }
+                else {
+                    drawCanvas(1,0);
+                    cxt.drawImage(attackImg,(720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-25,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-25,30,30);//1-2
+                    cxt.beginPath();
+                    cxt.setLineDash([5,5]);
+                    cxt.moveTo((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10);
+                    cxt.lineTo(720+stPostion[1]*4,360-(stPostion[0]*4));
+                    cxt.moveTo((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10);
+                    cxt.lineTo(720+stPostion[4]*4,360-(stPostion[3]*4));
+                    cxt.strokeStyle="#CD3333";
+                    cxt.lineWidth=2;
+                    cxt.stroke();
+                    cxt.setLineDash([5,0]);
+                    cxt.closePath();
+                    arrow((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10,720+stPostion[1]*4,360-(stPostion[0]*4),1,0);
+                    arrow((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10,720+stPostion[4]*4,360-(stPostion[3]*4),1,0);
+                    flowLSU(0);
+                    cxt.beginPath();
+                    cxt.moveTo(720+stPostion[4]*4,360-(stPostion[3]*4));
+                    cxt.lineTo(720+stPostion[1]*4,360-(stPostion[0]*4));
+                    cxt.strokeStyle="#00FF00";
+                    cxt.lineWidth=3;
+                    cxt.stroke();
+                    cxt.closePath();
+                    //alert("第4步");
+                    //cxt.fillStyle="#C0C0C0"
+                    //cxt.fillRect(1260,620,160,80);
+                    //cxt.fillStyle="#006400"
+                    //cxt.fillText("LSU信息：30211",1280,640 )
+
+                    resultImg.style.display="block";
+                    resultImg.src="FakeLSUUnsafe.png";
+                }
+                break;
+            default:
+                InfoDisplay.style.display="none";
+                AttInfoDis.style.display="none";
+                SatInfoDis.style.display="none";
+                alert("已结束");
+                break;
+        }
+        step=step+1;
+    }
+    function AmendLSU()
+    {
+        switch (step)
+        {
+            case 1:
+                if(safe){
+                    alert("Amend LSU包,有路由保护")
+                }
+                else {
+                    alert("Amend LSU包,无路由保护")
+                }
+                drawCanvasPart(0);
+                step++
+                break;
+            case 2:
+                drawCanvasPart(1);
+                step++
+                break;
+            case 3:
+                planeLSU(1)
+                /*cxt.beginPath();
+                cxt.moveTo(720+stPostion[10]*4,360-(stPostion[9]*4));
+                for(var j=4;j<8;j++)
+                {
+                    cxt.lineTo(720 + stPostion[ 1+j*3] * 4, 360 - (stPostion[j*3] * 4));
+                }
+                cxt.strokeStyle="#00FF00";
+                cxt.lineWidth=3;
+                cxt.stroke();
+                cxt.moveTo(720+stPostion[1]*4,360-(stPostion[0]*4));
+                cxt.lineTo(720+stPostion[22]*4,360-(stPostion[21]*4));
+                cxt.lineTo(720+stPostion[4]*4,360-(stPostion[3]*4));
+                cxt.lineTo(720+stPostion[7]*4,360-(stPostion[6]*4));
+                cxt.stroke();
+                cxt.closePath();*/
+                step++;
+                break;
+            case 4:
+                cxt.drawImage(attackImg,(720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-25,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-25,30,30);//1-2
+                cxt.beginPath();
+                cxt.setLineDash([5,5]);
+                cxt.moveTo((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10);
+                cxt.lineTo(720+stPostion[4]*4,360-(stPostion[3]*4));
+                cxt.strokeStyle="#CD3333";
+                cxt.lineWidth=2;
+                cxt.stroke();
+                cxt.setLineDash([5,0]);
+                cxt.closePath();
+                //arrow((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10,720+stPostion[1]*4,360-(stPostion[0]*4),1);
+                arrow((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10,720+stPostion[4]*4,360-(stPostion[3]*4),0,0);
+                step++
+
+                /*cxt.beginPath();
+                cxt.moveTo(720+stPostion[10]*4,360-(stPostion[9]*4));
+                cxt.lineTo(720+stPostion[7]*4,360-(stPostion[6]*4));
+                cxt.strokeStyle="#00FF00";
+                cxt.lineWidth=3;
+                cxt.stroke();
+                cxt.closePath();
+                step++*/
+                break;
+            case 5:
+                drawCanvasPart(0);
+
+                cxt.drawImage(attackImg,(720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-25,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-25,30,30);//1-2
+                /*
+                 */
+                step++;
+                break;
+            case 6:
+                /*if(safe) {
+                    alert("已结束,并未造成第二次全网洪泛")
+                }
+                else {
+                    cxt.beginPath();
+                    cxt.moveTo(720+stPostion[1]*4,360-(stPostion[0]*4));
+                    for(var j=1;j<8;j++)
+                    {
+                        cxt.lineTo(720 + stPostion[ 1+j*3] * 4, 360 - (stPostion[j*3] * 4));
+                    }
+                    cxt.closePath();
+                    cxt.strokeStyle="#00FF00";
+                    cxt.lineWidth=2;
+                    cxt.stroke();
+                }
+
+                 */
+                planeLSU(2);
+                cxt.drawImage(attackImg,(720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-25,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-25,30,30);//1-2
+
+                step++
+                break;
+            case 7:
+                drawCanvasPart(0);
+                cxt.drawImage(attackImg,(720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-25,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-25,30,30);//1-2
+                cxt.beginPath();
+                cxt.setLineDash([5,5]);
+                cxt.moveTo((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10);
+                cxt.lineTo(720+stPostion[1]*4,360-(stPostion[0]*4));
+                cxt.strokeStyle="#CD3333";
+                cxt.lineWidth=2;
+                cxt.stroke();
+                cxt.setLineDash([5,0]);
+                cxt.closePath();
+                arrow((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10,720+stPostion[1]*4,360-(stPostion[0]*4),1,0);
+                step++;
+                break;
+            case 8:
+                if(safe)
+                {
+                    alert("已结束，并未造成第三次洪泛")
+                }
+                else {
+                    planeLSU(3);
+                }
+                step++;
+                break;
+            default:
+                alert("已结束")
+                break;
+        }
+    }
+
+    function DelayLSU()
+    {
+        switch (step)
+        {
+            case 1:
+                if(safe){
+                    alert("Daley LSU包,有路由保护")
+                }
+                else {
+                    alert("Daley LSU包,无路由保护")
+                }
+                drawCanvasPart(0);
+                step++
+                break;
+            case 2:
+                drawCanvasPart(1);
+                step++
+                break;
+            case 3:
+                planeLSU(1)
+                /*cxt.beginPath();
+                cxt.moveTo(720+stPostion[10]*4,360-(stPostion[9]*4));
+                for(var j=4;j<8;j++)
+                {
+                    cxt.lineTo(720 + stPostion[ 1+j*3] * 4, 360 - (stPostion[j*3] * 4));
+                }
+                cxt.strokeStyle="#00FF00";
+                cxt.lineWidth=3;
+                cxt.stroke();
+                cxt.moveTo(720+stPostion[1]*4,360-(stPostion[0]*4));
+                cxt.lineTo(720+stPostion[22]*4,360-(stPostion[21]*4));
+                cxt.lineTo(720+stPostion[4]*4,360-(stPostion[3]*4));
+                cxt.lineTo(720+stPostion[7]*4,360-(stPostion[6]*4));
+                cxt.stroke();
+                cxt.closePath();*/
+                step++;
+                break;
+            case 4:
+                cxt.drawImage(attackImg,(720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-25,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-25,30,30);//1-2
+                cxt.beginPath();
+                cxt.setLineDash([5,5]);
+                cxt.moveTo((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10);
+                cxt.lineTo(720+stPostion[4]*4,360-(stPostion[3]*4));
+                cxt.strokeStyle="#CD3333";
+                cxt.lineWidth=2;
+                cxt.stroke();
+                cxt.setLineDash([5,0]);
+                cxt.closePath();
+                //arrow((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10,720+stPostion[1]*4,360-(stPostion[0]*4),1);
+                arrow((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10,720+stPostion[4]*4,360-(stPostion[3]*4),0,0);
+                step++
+
+                /*cxt.beginPath();
+                cxt.moveTo(720+stPostion[10]*4,360-(stPostion[9]*4));
+                cxt.lineTo(720+stPostion[7]*4,360-(stPostion[6]*4));
+                cxt.strokeStyle="#00FF00";
+                cxt.lineWidth=3;
+                cxt.stroke();
+                cxt.closePath();
+                step++*/
+                break;
+            case 5:
+                drawCanvasPart(0);
+
+                cxt.drawImage(attackImg,(720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-25,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-25,30,30);//1-2
+                /*
+                 */
+                step++;
+                break;
+            case 6:
+                /*if(safe) {
+                    alert("已结束,并未造成第二次全网洪泛")
+                }
+                else {
+                    cxt.beginPath();
+                    cxt.moveTo(720+stPostion[1]*4,360-(stPostion[0]*4));
+                    for(var j=1;j<8;j++)
+                    {
+                        cxt.lineTo(720 + stPostion[ 1+j*3] * 4, 360 - (stPostion[j*3] * 4));
+                    }
+                    cxt.closePath();
+                    cxt.strokeStyle="#00FF00";
+                    cxt.lineWidth=2;
+                    cxt.stroke();
+                }
+
+                 */
+                planeLSU(2);
+                cxt.drawImage(attackImg,(720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-25,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-25,30,30);//1-2
+
+                step++
+                break;
+            case 7:
+                drawCanvasPart(0);
+                cxt.drawImage(attackImg,(720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-25,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-25,30,30);//1-2
+                cxt.beginPath();
+                cxt.setLineDash([5,5]);
+                cxt.moveTo((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10);
+                cxt.lineTo(720+stPostion[1]*4,360-(stPostion[0]*4));
+                cxt.strokeStyle="#CD3333";
+                cxt.lineWidth=2;
+                cxt.stroke();
+                cxt.setLineDash([5,0]);
+                cxt.closePath();
+                arrow((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10,720+stPostion[1]*4,360-(stPostion[0]*4),1,0);
+                step++;
+                break;
+            case 8:
+                if(safe)
+                {
+                    alert("已结束，并未造成第三次洪泛")
+                }
+                else {
+                    planeLSU(3);
+                }
+                step++;
+                break;
+            default:
+                alert("已结束")
+                break;
+        }
+    }
+
+
+</script>
+
+</body>
+</html>

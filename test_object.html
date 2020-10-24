@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div>
+    <button onclick="show()">press</button>
+</div>
+
+<script type="text/javascript">
+    var testFlag={
+        "value":1,
+    }
+
+    Object.defineProperty(testFlag,'value',{
+        get:function (){
+            return value;
+        }
+    });
+
+    function show()
+    {
+        alert(testFlag.value)
+    }
+</script>
+</body>
+</html>

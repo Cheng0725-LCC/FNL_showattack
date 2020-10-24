@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div style="display:none;">
+    <img id="weixing"
+         src="卫星.png"
+         width="0" height="0">
+</div>
+<button id="btn" onclick="setInterval(update,500)">click</button>
+<canvas id='mycanvas' width="500" height="500"></canvas>
+<p id="text"></p>
+<script type="text/javascript">
+
+    //window.onload = function(){
+        var c = document.getElementById('mycanvas');
+        var ctx = c.getContext('2d');
+        var t=1;
+        // 内存中先加载，然后当内存加载完毕时，再把内存中的数据填充到我们的 dom元素中，这样能够快速的去
+        // 反应，比如网易的图片
+        var img = document.getElementById("weixing");
+        //img.src = "卫星.png";
+        //for(var i=0;i<3;i++) {
+            /*img.onload = function(img){
+                return function() {
+                    ctx.drawImage(img,10,10,30,30);
+                    ctx.drawImage(img,100,32,30,30);
+                    ctx.drawImage(img,100+t*20,100,30,30);
+                };
+            }(img);
+        //}*/
+        var img = document.getElementById("weixing");
+        img.addEventListener('load', e => {
+        ctx.drawImage(img,10,10,30,30);
+        ctx.drawImage(img,100,32,30,30);
+        ctx.drawImage(img,100+t*20,100,30,30);
+        alert("ok");
+    });
+        function drawPicture(t)
+        {
+            //mycanvas.offsetHeight=mycanvas.offsetHeight;
+            ctx.clearRect(0,0,c.width,c.height);
+            ctx.drawImage(img,10,10,30,30);
+            ctx.drawImage(img,100,32,30,30);
+            ctx.drawImage(img,100+t*20,100,30,30);
+            //alert("清除成功！");
+        }
+
+    //drawPicture(2);
+    document.getElementById("text").innerHTML=t;
+    //}
+    //var btn = document.getElementById("btn");
+    /*btn.addEventListener('click',function(){
+        //alert("hello wrold");
+        t=t+1;
+        document.getElementById("text").innerHTML=t;
+        drawPicture(t);
+        //location.reload(true);
+    },false)*/
+    function update() {
+        t=t+1;
+        document.getElementById("text").innerHTML=t;
+        drawPicture(t);
+    }
+    function arrow(x1,y1,x2,y2) {
+        ctx.translate(x2,y2);
+        var ang= ((x2-x1)/(y2-y1));
+        ang=Math.atan(ang);
+        if(y2-y1>=0)
+        {
+            ctx.rotate(-ang);
+        }
+        else
+        {
+            ctx.rotate(Math.PI-ang);
+        }
+        ctx.beginPath();
+        ctx.lineTo(-5,-10);
+        ctx.lineTo(0,-5);
+        ctx.lineTo(5,-10);
+        ctx.lineTo(0,0);
+        ctx.fill()
+        ctx.stroke();
+        ctx.closePath();
+    }
+    ctx.beginPath()
+    ctx.moveTo(1,1);
+    ctx.lineTo(20,20);
+    ctx.stroke();
+    ctx.closePath()
+    arrow(1,1,20,20);
+
+
+</script>
+
+</body>
+</html>
