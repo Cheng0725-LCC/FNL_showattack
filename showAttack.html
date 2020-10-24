@@ -232,7 +232,7 @@
         stPostion[3*(i-1)+2]=Number(temp[2]);
     }
 
-    stImg.addEventListener('load', e => {
+    //stImg.addEventListener('load', e => {
         //ctx.drawImage(image, 33, 71, 104, 124, 21, 20, 87, 104);
         cxt.drawImage(stImg,720+stPostion[1]*4-15,360-(stPostion[0]*4)-15,30,30);//1
         cxt.drawImage(stImg,720+stPostion[4]*4-15,360-(stPostion[3]*4)-15,30,30);
@@ -283,7 +283,7 @@
         cxt.drawImage(stImg,720+stPostion[139]*4-15,360-(stPostion[138]*4)-15,30,30);
         cxt.drawImage(stImg,720+stPostion[142]*4-15,360-(stPostion[141]*4)-15,30,30);
 
-    });
+    //});
 
     //攻击卫星连线
     //setlinedash
