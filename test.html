@@ -65,6 +65,7 @@
 <div style="display:none;">
     <img id="weixing" src="卫星.png" width="0" height="0">
     <img id="attack" src="攻击卫星.png" width="0" height="0">
+    <img src="bg.png" width="0" height="0">
 </div>
 <div align="center" class="father">
     <canvas id="myCanvas" width="1440" height="720" class="canvas" style="border:0px solid #c3c3c3;">
@@ -172,54 +173,54 @@
         cxt.drawImage(stImg,720+stPostion[139]*4-15,360-(stPostion[138]*4)-15,30,30);
         cxt.drawImage(stImg,720+stPostion[142]*4-15,360-(stPostion[141]*4)-15,30,30);
 
-    });
-     //标序号
-    for(var i=1;i<49;i++)
-    {
-        //var strPostion=getPosition(1,i);
-        var latitude=stPostion[3*(i-1)];
-        var longitude=stPostion[3*(i-1)+1];
-        var stDirection=stPostion[3*(i-1)+2];
 
-        cxt.beginPath();
-        cxt.fillStyle="#00FF00";
-        //cxt.arc(720+longitude*4,360-(latitude*4),8,0,Math.PI*2,true);
-        //cxt.drawImage(stImg,720+longitude*4,360-(latitude*4),30,30);
-        cxt.font="bolder 15px Arial";
-        cxt.fillText(i,720+longitude*4-28,360-latitude*4);//卫星编号
-        cxt.fill();
-        cxt.closePath();
-
-    }
-    //画环
-    for(var i=1;i<7;i++)
-    {
-        cxt.beginPath();
-        cxt.moveTo(720+stPostion[24*(i-1)+1]*4,360-(stPostion[24*(i-1)]*4));
-        for(var j=1;j<8;j++)
+         //标序号
+        for(var i=1;i<49;i++)
         {
-            cxt.lineTo(720 + stPostion[24 * (i - 1) + 1+j*3] * 4, 360 - (stPostion[24 * (i - 1)+j*3] * 4));
+            //var strPostion=getPosition(1,i);
+            var latitude=stPostion[3*(i-1)];
+            var longitude=stPostion[3*(i-1)+1];
+            var stDirection=stPostion[3*(i-1)+2];
+
+            cxt.beginPath();
+            cxt.fillStyle="#00FF00";
+            //cxt.arc(720+longitude*4,360-(latitude*4),8,0,Math.PI*2,true);
+            //cxt.drawImage(stImg,720+longitude*4,360-(latitude*4),30,30);
+            cxt.font="bolder 15px Arial";
+            cxt.fillText(i,720+longitude*4-28,360-latitude*4);//卫星编号
+            cxt.fill();
+            cxt.closePath();
+
         }
-        cxt.closePath();
-        cxt.strokeStyle="#FFCC00";
-        cxt.lineWidth=2;
-        cxt.stroke();
-    }
-    //环之间的连接
-    for(var i=1;i<6;i++)
-    {
-        for(var j=0;j<8;j++)
+        //画环
+        for(var i=1;i<7;i++)
         {
             cxt.beginPath();
-            cxt.moveTo(720+stPostion[24*(i-1)+1+j*3]*4,360-(stPostion[24*(i-1)+j*3]*4));
-            cxt.lineTo(720+stPostion[24*i+1+j*3]*4,360-(stPostion[24*i+j*3]*4));
+            cxt.moveTo(720+stPostion[24*(i-1)+1]*4,360-(stPostion[24*(i-1)]*4));
+            for(var j=1;j<8;j++)
+            {
+                cxt.lineTo(720 + stPostion[24 * (i - 1) + 1+j*3] * 4, 360 - (stPostion[24 * (i - 1)+j*3] * 4));
+            }
             cxt.closePath();
             cxt.strokeStyle="#FFCC00";
             cxt.lineWidth=2;
             cxt.stroke();
         }
-    }
-
+        //环之间的连接
+        for(var i=1;i<6;i++)
+        {
+            for(var j=0;j<8;j++)
+            {
+                cxt.beginPath();
+                cxt.moveTo(720+stPostion[24*(i-1)+1+j*3]*4,360-(stPostion[24*(i-1)+j*3]*4));
+                cxt.lineTo(720+stPostion[24*i+1+j*3]*4,360-(stPostion[24*i+j*3]*4));
+                cxt.closePath();
+                cxt.strokeStyle="#FFCC00";
+                cxt.lineWidth=2;
+                cxt.stroke();
+            }
+        }
+    });
     document.getElementById("time").innerHTML=t;
     var btn = document.getElementById("btn");
     btn.addEventListener('click',function(){
