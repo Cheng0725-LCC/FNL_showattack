@@ -95,7 +95,7 @@
 <div style="display:none;">
     <img id="weixing" src="卫星.png" width="0" height="0">
     <img id="attack" src="攻击卫星.png" width="0" height="0">
-    <img src="bg.png" width="0" height="0">
+    <img id="background" src="bg.png" width="0" height="0">
 </div>
 <div align="center" class="father">
     <canvas id="myCanvas" width="1440" height="720" class="canvas" style="border:0px solid #c3c3c3;">
@@ -209,6 +209,7 @@
     var cxt=c.getContext("2d");
     var stImg=document.getElementById("weixing");
     var attackImg=document.getElementById("attack")
+    var bgImg=document.getElementById("background")
     var t=1;
 
     var step=1;
@@ -333,15 +334,18 @@
         }
     }
 
-    stImg.addEventListener('load', e=> {
-        //alert("加载完啦")
-       drawFlag=0;
-       initialCanvas();
-  });
+    bgImg.addEventListener('load',e=>{
+        stImg.addEventListener('load', e=> {
+            //alert("加载完啦")
+            drawFlag=0;
+            initialCanvas();
+        });
+        if(drawFlag==1){
+            initialCanvas();
+        }
+    });
 
-    if(drawFlag==1){
-        initialCanvas();
-    }
+
     //画箭头
 
     /*
