@@ -220,19 +220,20 @@
             }
         }
     }
+    if(bgImg.complete&&stImg.complete){
+        initialCanvas();
+    }
 
     bgImg.addEventListener('load',e=>{
-        stImg.addEventListener('load', e => {
-            //alert("加载完啦")
-            //ctx.drawImage(image, 33, 71, 104, 124, 21, 20, 87, 104);
-            drawFlag=0;
-            initialCanvas();
-
-        });
-        if(drawFlag=1){
+        if(stImg.complete){
             initialCanvas();
         }
-    })
+    });
+    stImg.addEventListener('load', e=> {
+        if(bgImg.complete){
+            initialCanvas();
+        }
+    });
 
 
     document.getElementById("time").innerHTML=t;
