@@ -679,6 +679,7 @@
     var currentSatDown=1;
     var current_=1;
     var alertFlag=0;
+    var alertNote=undefined;
 
     function lineMove(points,dir,current) {
         if(animationStop==1){
@@ -689,7 +690,10 @@
             //alert(flag)
             //alert(small)
             if(NONE){
-                alert("备份路由已完成");
+                if(alertFlag==0){
+                    alert(alertNote);
+                    alertFlag=1;
+                }
                 return ;
             }
 
@@ -732,8 +736,12 @@
                     if(satSate.every(checkSat)&&alertFlag==0){
                         alertFlag=1;
                         animationStop=1;
-                        alert("洪泛结束");
-
+                        if(alertNote==undefined)
+                        {
+                            alert("洪泛结束");
+                        }
+                        else alert(alertNote);
+                        alertNote=undefined;
                     }
                     return;
                 }
@@ -853,6 +861,7 @@
     }
 
     function planeLSU(i){
+        alertFlag=0;
         switch (i)
         {
             case 1:
@@ -893,6 +902,8 @@
         UP=false;
         RIGHT=false;
         DOWN=false;
+        alertFlag=0;
+        alertNote="第一次LSU洪泛完成";
         AnimateLine(pointFirst1,0,1);
         AnimateLine(pointFirst2,0,1);
     }
@@ -929,6 +940,8 @@
         UP=false;
         RIGHT=false;
         DOWN=false;
+        alertFlag=0;
+        alertNote="第二次LSU洪泛完成"
         AnimateLine(pointSecond1,0,1);
         AnimateLine(pointSecond2,0,1);
         AnimateLine(pointSecond3,0,1);
@@ -943,14 +956,15 @@
             [720+stPostion[16]*4,360-(stPostion[15]*4)],
             [720+stPostion[13]*4,360-(stPostion[12]*4)],
             [720+stPostion[10]*4,360-(stPostion[9]*4)],
+            [720+stPostion[7]*4,360-(stPostion[6]*4)]
             //[720+stPostion[7]*4,360-(stPostion[6]*4)],
             //[720+stPostion[4]*4,360-(stPostion[3]*4)]
         ]
         var pointThird2=[
             [720+stPostion[1]*4,360-(stPostion[0]*4)],
             [720+stPostion[4]*4,360-(stPostion[3]*4)],
-            [720+stPostion[7]*4,360-(stPostion[6]*4)],
-            [720+stPostion[10]*4,360-(stPostion[9]*4)]
+            //[720+stPostion[7]*4,360-(stPostion[6]*4)],
+            //[720+stPostion[10]*4,360-(stPostion[9]*4)]
             //[720+stPostion[13]*4,360-(stPostion[12]*4)],
             //[720+stPostion[16]*4,360-(stPostion[15]*4)],
             //[720+stPostion[19]*4,360-(stPostion[18]*4)],
@@ -960,8 +974,11 @@
         UP=false;
         RIGHT=false;
         DOWN=false;
-        AnimateLine(pointThird1,0,1);
+        alertFlag=1;
+        alertNote="由于攻击卫星导致的第三次LSU洪泛完成"
         AnimateLine(pointThird2,0,1);
+        alertFlag=0
+        AnimateLine(pointThird1,0,1);
     }
 
     function checkSat(val) {
@@ -1027,59 +1044,27 @@
                     pointsDown=LSUposDown(currentSat);
                     AnimateLine(pointsDown,3,currentSat);
                 }
-                //alert("画后的"+currentSat);
                 // 当listenMenuTree 的value值发生改变时，触发set函数的内容
 
             }
         });
+    }
+    //画X函数，i和j分别是连线两端的卫星编号
+    function drawCross(i,j){
+        let mid_x=(720+stPostion[3*(i-1)+1]*4+720+stPostion[3*(j-1)+1]*4)/2;
+        let mid_y=(360-(stPostion[3*(i-1)]*4)+360-(stPostion[3*(j-1)]*4))/2;
 
-        //画环
-        /*for(var i=1;i<7;i++)
-        {
-            if(i==1)
-            {
-                cxt.beginPath();
-                cxt.moveTo(720+stPostion[4]*4,360-(stPostion[3]*4));
-                for(var j=2;j<8;j++)
-                {
-                    cxt.lineTo(720 + stPostion[ 1+j*3] * 4, 360 - (stPostion[j*3] * 4));
-                }
-                //cxt.closePath();
-                cxt.strokeStyle="#00FF00";
-                cxt.lineWidth=2;
-                cxt.stroke();
-                cxt.moveTo(720+stPostion[1]*4,360-(stPostion[0]*4));
-                cxt.lineTo(720+stPostion[22]*4,360-(stPostion[21]*4));
-                cxt.stroke();
-            }
-            else
-            {
-                cxt.beginPath();
-                cxt.moveTo(720+stPostion[24*(i-1)+1]*4,360-(stPostion[24*(i-1)]*4));
-                for(var j=1;j<8;j++)
-                {
-                    cxt.lineTo(720 + stPostion[24 * (i - 1) + 1+j*3] * 4, 360 - (stPostion[24 * (i - 1)+j*3] * 4));
-                }
-                cxt.closePath();
-                cxt.strokeStyle="#00FF00";
-                cxt.lineWidth=2;
-                cxt.stroke();
-            }
-        }
-        //环之间的连接
-        for(var i=1;i<6;i++)
-        {
-            for(var j=0;j<8;j++)
-            {
-                cxt.beginPath();
-                cxt.moveTo(720+stPostion[24*(i-1)+1+j*3]*4,360-(stPostion[24*(i-1)+j*3]*4));
-                cxt.lineTo(720+stPostion[24*i+1+j*3]*4,360-(stPostion[24*i+j*3]*4));
-                cxt.closePath();
-                cxt.strokeStyle="#00FF00";
-                cxt.lineWidth=2.5;
-                cxt.stroke();
-            }
-        }*/
+        cxt.save();
+        cxt.beginPath();
+        cxt.moveTo(mid_x-8,mid_y-8);
+        cxt.lineTo(mid_x+8,mid_y+8);
+        cxt.moveTo(mid_x-8,mid_y+8);
+        cxt.lineTo(mid_x+8,mid_y-8);
+        cxt.strokeStyle="#CD3333";
+        cxt.lineWidth=1.5;
+        cxt.stroke();
+        cxt.restore();
+
     }
 
     function DropHello(){
@@ -1114,16 +1099,7 @@
 
             case 3:
             {
-                var mid5=(720+stPostion[1]*4+720+stPostion[4]*4)/2;
-                var mid6=(360-(stPostion[0]*4)+360-(stPostion[3]*4))/2
-                cxt.beginPath();
-                cxt.moveTo(mid5-8,mid6-8);
-                cxt.lineTo(mid5+8,mid6+8);
-                cxt.moveTo(mid5-8,mid6+8);
-                cxt.lineTo(mid5+8,mid6-8);
-                cxt.strokeStyle="#CD3333";
-                cxt.lineWidth=1.5;
-                cxt.stroke();
+                drawCross(1,2);
                 //alert("第3步");
                 break;
             }
@@ -1216,24 +1192,13 @@
             case 4:
                 if(safe)
                 {
-                    /*cxt.beginPath()
-                    cxt.moveTo(720+stPostion[1]*4,360-(stPostion[0]*4));
-                    cxt.lineTo(720+stPostion[25]*4,360-(stPostion[24]*4));
-                    cxt.lineTo(720+stPostion[28]*4,360-(stPostion[27]*4));
-                    cxt.lineTo(720+stPostion[4]*4,360-(stPostion[3]*4));
-                    cxt.strokeStyle="#00FF00";
-                    cxt.lineWidth=2.5;
-                    cxt.stroke();
-                    cxt.closePath();
-
-                     */
                     flowLSU(1);
                     resultImg.style.display="block";
                     resultImg.src="FakeHelloSafe.png"
                 }
-                else flowLSU(1);
-
-                //alert("第4步");
+                else {
+                    alertNote="洪泛不收敛";
+                    flowLSU(1);}
                 break;
             case 5:
                 if (safe)
@@ -1251,7 +1216,6 @@
                     cxt.stroke();
                     cxt.setLineDash([5,0]);
                     cxt.closePath();
-                    //alert("第5步");
                 }
                 break;
             case 6:
@@ -1279,8 +1243,6 @@
                     alert("FakeLSU,有路由保护");
                 else
                     alert("FakeLSU,无路由保护");
-               // cxt.fillStyle="#C0C0C0"
-                //cxt.fillRect(1260,620,160,80);
                 break;
             case 2:
                 cxt.drawImage(attackImg,(720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-25,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-25,30,30);//1-2
@@ -1297,8 +1259,6 @@
                 cxt.closePath();
                 arrow((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10,720+stPostion[1]*4,360-(stPostion[0]*4),1,0);
                 arrow((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10,720+stPostion[4]*4,360-(stPostion[3]*4),1,0);
-                //alert("第2步");
-
                 break;
             case 3:
                 if(safe)
@@ -1324,6 +1284,7 @@
                     resultImg.src="FakeLSUSafe.png";
                 }
                 else {
+                    cxt.save();
                     cxt.beginPath();
                     cxt.setLineDash([5,5]);
                     cxt.moveTo(720+stPostion[4]*4+5,360-(stPostion[3]*4)+5);
@@ -1333,10 +1294,7 @@
                     cxt.stroke();
                     cxt.setLineDash([5,0]);
                     cxt.closePath();
-
-
-                    //cxt.fillStyle="#006400"
-                    //cxt.fillText("LSU信息包：30210",1280,640);
+                    cxt.restore();
                 }
                 //alert("第3步");
                 break;
@@ -1364,19 +1322,6 @@
                     arrow((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10,720+stPostion[1]*4,360-(stPostion[0]*4),1,0);
                     arrow((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10,720+stPostion[4]*4,360-(stPostion[3]*4),1,0);
                     flowLSU(0);
-                    /*cxt.beginPath();
-                    cxt.moveTo(720+stPostion[4]*4,360-(stPostion[3]*4));
-                    cxt.lineTo(720+stPostion[1]*4,360-(stPostion[0]*4));
-                    cxt.strokeStyle="#00FF00";
-                    cxt.lineWidth=3;
-                    cxt.stroke();
-                    cxt.closePath();
-                     */
-                    //alert("第4步");
-                    //cxt.fillStyle="#C0C0C0"
-                    //cxt.fillRect(1260,620,160,80);
-                    //cxt.fillStyle="#006400"
-                    //cxt.fillText("LSU信息：30211",1280,640 )
 
                     resultImg.style.display="block";
                     resultImg.src="FakeLSUUnsafe.png";
@@ -1411,21 +1356,6 @@
                 break;
             case 3:
                 planeLSU(1)
-                /*cxt.beginPath();
-                cxt.moveTo(720+stPostion[10]*4,360-(stPostion[9]*4));
-                for(var j=4;j<8;j++)
-                {
-                    cxt.lineTo(720 + stPostion[ 1+j*3] * 4, 360 - (stPostion[j*3] * 4));
-                }
-                cxt.strokeStyle="#00FF00";
-                cxt.lineWidth=3;
-                cxt.stroke();
-                cxt.moveTo(720+stPostion[1]*4,360-(stPostion[0]*4));
-                cxt.lineTo(720+stPostion[22]*4,360-(stPostion[21]*4));
-                cxt.lineTo(720+stPostion[4]*4,360-(stPostion[3]*4));
-                cxt.lineTo(720+stPostion[7]*4,360-(stPostion[6]*4));
-                cxt.stroke();
-                cxt.closePath();*/
                 step++;
                 break;
             case 4:
@@ -1439,48 +1369,18 @@
                 cxt.stroke();
                 cxt.setLineDash([5,0]);
                 cxt.closePath();
-                //arrow((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10,720+stPostion[1]*4,360-(stPostion[0]*4),1);
                 arrow((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10,720+stPostion[4]*4,360-(stPostion[3]*4),0,0);
                 step++
-
-                /*cxt.beginPath();
-                cxt.moveTo(720+stPostion[10]*4,360-(stPostion[9]*4));
-                cxt.lineTo(720+stPostion[7]*4,360-(stPostion[6]*4));
-                cxt.strokeStyle="#00FF00";
-                cxt.lineWidth=3;
-                cxt.stroke();
-                cxt.closePath();
-                step++*/
                 break;
             case 5:
                 drawCanvasPart(0);
 
                 cxt.drawImage(attackImg,(720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-25,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-25,30,30);//1-2
-                /*
-                 */
                 step++;
                 break;
             case 6:
-                /*if(safe) {
-                    alert("已结束,并未造成第二次全网洪泛")
-                }
-                else {
-                    cxt.beginPath();
-                    cxt.moveTo(720+stPostion[1]*4,360-(stPostion[0]*4));
-                    for(var j=1;j<8;j++)
-                    {
-                        cxt.lineTo(720 + stPostion[ 1+j*3] * 4, 360 - (stPostion[j*3] * 4));
-                    }
-                    cxt.closePath();
-                    cxt.strokeStyle="#00FF00";
-                    cxt.lineWidth=2;
-                    cxt.stroke();
-                }
-
-                 */
                 planeLSU(2);
                 cxt.drawImage(attackImg,(720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-25,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-25,30,30);//1-2
-
                 step++
                 break;
             case 7:
@@ -1505,6 +1405,16 @@
                 }
                 else {
                     planeLSU(3);
+                }
+                step++;
+                break;
+            case 9:
+                if(safe)
+                {
+                    alert("已结束")
+                }
+                else {
+                    drawCross(2,3)
                 }
                 step++;
                 break;
