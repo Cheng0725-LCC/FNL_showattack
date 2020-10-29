@@ -71,23 +71,31 @@
         height: 473px;
         width: 633px;
     }
+    .img_time{
+        left:1450px;
+        position: absolute;
+        top:675px;
+        height: 473px;
+        width: 633px;
+    }
     .info{
         top:730px;
         width: 1440px;
         position: absolute;
 
     }
-    .attackinfo{
+    .sendInfo{
         padding: 2px 20px;
         position: relative;
         background-color:#F58F8F;
 
     }
-    .satinfo{
+    .receiveInfo{
         padding: 2px 20px;
         position: relative;
         background-color:#98E298;
     }
+
 
 </style>
 
@@ -117,19 +125,18 @@
     </form>
 </div>
 <div class="info" id="Info" style="display: none">
-    <div class="attackinfo" id="AttInfo" style="display: none">
-        <strong id="AttTitle"></strong>
-        <p><a id="exp1"></a><strong id="con1"></strong></p>
-        <p><a id="exp2"></a><strong id="con2"></strong></p>
+    <div class="sendInfo" id="sendInfo" style="display: none">
     </div>
-    <div class="satinfo" id="SatInfo" style="display: none">
-        <strong id="SatTitle"></strong>
-        <p id="shuoming"></p>
-        <p><a id="exp3"></a><strong id="con3"></strong></p>
-        <p><a id="exp4"></a><strong id="con4"></strong></p>
+    <div class="receiveInfo" id="receiveInfo" style="display: none">
     </div>
 </div>
-    <img src="FakeHello.png" class="img" style="display: none" id="showResult">
+<div id="showResult" style="display: none">
+    <img src="FakeHello.png" class="img"  id="showResult_img">
+    <p class="img_time"><a id="flowText"></a><strong id="flowTime"></strong></p>
+</div>
+
+
+
 
 <script type="text/javascript">
 
@@ -170,14 +177,16 @@
     {
         //重新初始化各种指标 flag
         InfoDisplay.style.display="none";
-        AttInfoDis.style.display="none";
-        SatInfoDis.style.display="none";
+        sendInfoDis.style.display="none";
+        receiveInfoDis.style.display="none";
         drawCanvas(1,0);
         step=1;
         selectMod();
-        resultImg.style.display="none";
+        resultShow.style.display="none";
         animationStop=0;
         alertFlag=0;
+        sendInfo="";
+        receiveInfo="";
     }
 
     function selectMod(){
@@ -217,11 +226,14 @@
 
     var speed=2;
 
-    var resultImg=document.getElementById("showResult")
+    var resultShow=document.getElementById("showResult")
+    var resultImg=document.getElementById("showResult_img")
+    var resultText=document.getElementById("flowText")
+    var resultTime=document.getElementById("flowTime")
 
     var InfoDisplay=document.getElementById("Info")
-    var AttInfoDis=document.getElementById("AttInfo")
-    var SatInfoDis=document.getElementById("SatInfo")
+    var sendInfoDis=document.getElementById("sendInfo")
+    var receiveInfoDis=document.getElementById("receiveInfo")
 
     var stPostion=new Array();
 
@@ -680,6 +692,10 @@
     var current_=1;
     var alertFlag=0;
     var alertNote=undefined;
+    var alertTimes=2;
+
+    var sendInfo;
+    var receiveInfo;
 
     function lineMove(points,dir,current) {
         if(animationStop==1){
@@ -690,10 +706,11 @@
             //alert(flag)
             //alert(small)
             if(NONE){
-                if(alertFlag==0){
+                if(alertFlag==0&&alertTimes==2){
                     alert(alertNote);
                     alertFlag=1;
                 }
+                else alertTimes=2;
                 return ;
             }
 
@@ -948,6 +965,7 @@
         AnimateLine(pointSecond4,0,1);
     }
     function LSUThird(){
+        alertTimes=1;
         var pointThird1=[
 
             [720+stPostion[1]*4,360-(stPostion[0]*4)],
@@ -1107,34 +1125,32 @@
             case 4:
                 if(safe)
                 {
-                    /*cxt.beginPath()
-                    cxt.moveTo(720+stPostion[1]*4,360-(stPostion[0]*4));
-                    cxt.lineTo(720+stPostion[25]*4,360-(stPostion[24]*4));
-                    cxt.lineTo(720+stPostion[28]*4,360-(stPostion[27]*4));
-                    cxt.lineTo(720+stPostion[4]*4,360-(stPostion[3]*4));
-                    cxt.strokeStyle="#00FF00";
-                    cxt.lineWidth=2.5;
-                    cxt.stroke();
-                    cxt.closePath();
-                    */
+
+                    alertNote="局部洪泛已完成"
                     smallFlowLSU();
 
-                    resultImg.style.display="block";
+                    resultShow.style.display="block";
                     resultImg.src="DropHelloSafe.png";
+                    resultText.innerText="局部洪泛LSU包时间：";
+                    resultTime.innerText="61.5 ms";
                 }
                 //alert("第4步");
                 else {
                     flowLSU(1);
-                    resultImg.style.display="block";
+                    resultShow.style.display="block";
                     resultImg.src="DropHelloUnsafe.png";
+                    resultText.innerText="全网洪泛LSU包时间：";
+                    resultTime.innerText="171 ms";
                 }
                 break;
 
             case 5:
                 if (safe)
                 {
-                    resultImg.style.display="block";
+                    resultShow.style.display="block";
                     resultImg.src="DropHello.png";
+                    resultText.innerText="";
+                    resultTime.innerText="";
                 }
                 else alert("已结束")
                 //alert(satSate.toString())
@@ -1193,8 +1209,10 @@
                 if(safe)
                 {
                     flowLSU(1);
-                    resultImg.style.display="block";
-                    resultImg.src="FakeHelloSafe.png"
+                    resultShow.style.display="block";
+                    resultImg.src="FakeHelloSafe.png";
+                    resultText.innerText="全网洪泛LSU包时间：";
+                    resultTime.innerText="192 ms";
                 }
                 else {
                     alertNote="洪泛不收敛";
@@ -1203,8 +1221,10 @@
             case 5:
                 if (safe)
                 {
-                    resultImg.style.display="block";
+                    resultShow.style.display="block";
                     resultImg.src="FakeHello.png"
+                    resultText.innerText=""
+                    resultTime.innerText=""
                 }
                 else {
                     cxt.beginPath();
@@ -1225,8 +1245,10 @@
                 }
                 else
                 {
-                    resultImg.style.display="block";
+                    resultShow.style.display="block";
                     resultImg.src="FakeHelloUnsafe.png";
+                    resultText.innerText="洪泛一次LSU包时间：";
+                    resultTime.innerText="169.5 ms";
                 }
                 break;
             default:
@@ -1263,25 +1285,28 @@
             case 3:
                 if(safe)
                 {
-                    alert("展示加密过程")
+                    alert("展示认证过程")
                     InfoDisplay.style.display="block";
-                    AttInfoDis.style.display="block";
-                    SatInfoDis.style.display="block";
+                    sendInfoDis.style.display="block";
+                    receiveInfoDis.style.display="block";
 
-                    document.getElementById("AttTitle").innerText="攻击卫星：";
-                    document.getElementById("exp1").innerText="伪LSU包内容：";
-                    document.getElementById("con1").innerText="30201 key:1";
-                    document.getElementById("exp2").innerText="对LSU信息做HMAC之后的结果:";
-                    document.getElementById("con2").innerText="6B86B273FF34F0E19D6B804EFF5A3F5747ADA...";
-                    document.getElementById("SatTitle").innerText="Sat1:";
-                    document.getElementById("shuoming").innerText="包传递到Sat1上，将LSU信息与本地key:200 做Hash";
-                    document.getElementById("exp3").innerText="接受到的LSU内容：";
-                    document.getElementById("con3").innerText="30201";
-                    document.getElementById("exp4").innerText="对LSU信息做HMAC之后的结果:";
-                    document.getElementById("con4").innerText="27BADC983DF1780B60C2B3FA9D3A19A00E46A...";
+                    sendInfo="<p><strong>攻击卫星</strong>打包加密过程:</p>";
+                    sendInfo+="<p>伪LSU包内容：<strong></strong>30201 key:1</p>";
+                    sendInfo+="<p>对LSU信息做HMAC之后的结果:<strong>6B86B273FF34F0E19D6B804EFF5A3F5747ADA...</strong></p>"
 
-                    resultImg.style.display="block";
+                    receiveInfo="<p><strong>Sat1</strong></p>";
+                    receiveInfo+="<p>LSU包传递到Sat1上，将LSU信息与本地key:200 做HMAC</p>"
+                    receiveInfo+="<p>接受到的LSU内容：<strong>30201</strong></p>"
+                    receiveInfo+="<p>对LSU信息做HMAC之后的结果:<strong>27BADC983DF1780B60C2B3FA9D3A19A00E46A...</strong></p>"
+                    receiveInfo+="<strong>比对不一致，对此LSU包丢弃</strong>"
+
+                    sendInfoDis.innerHTML=sendInfo;
+                    receiveInfoDis.innerHTML=receiveInfo;
+
+                    resultShow.style.display="block";
                     resultImg.src="FakeLSUSafe.png";
+                    resultText.innerText=""
+                    resultTime.innerText=""
                 }
                 else {
                     cxt.save();
@@ -1302,8 +1327,11 @@
                 if(safe)
                 {
                     //alert("已结束，并未造成影响")
-                    resultImg.style.display="block";
+                    resultShow.style.display="block";
                     resultImg.src="FakeLSU.png";
+                    resultText.innerText=""
+                    resultTime.innerText=""
+
                 }
                 else {
                     drawCanvas(1,0);
@@ -1323,14 +1351,16 @@
                     arrow((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10,720+stPostion[4]*4,360-(stPostion[3]*4),1,0);
                     flowLSU(0);
 
-                    resultImg.style.display="block";
+                    resultShow.style.display="block";
                     resultImg.src="FakeLSUUnsafe.png";
+                    resultText.innerText="全网洪泛LSU包时间："
+                    resultTime.innerText="171 ms"
                 }
                 break;
             default:
                 InfoDisplay.style.display="none";
-                AttInfoDis.style.display="none";
-                SatInfoDis.style.display="none";
+                sendInfoDis.style.display="none";
+                receiveInfoDis.style.display="none";
                 alert("已结束");
                 break;
         }
@@ -1402,6 +1432,10 @@
                 if(safe)
                 {
                     alert("已结束，并未造成第三次洪泛")
+                    resultShow.style.display="block";
+                    resultImg.src="AmendLSUSafe.png";
+                    resultText.innerText="全网洪泛LSU包时间："
+                    resultTime.innerText="192 ms"
                 }
                 else {
                     planeLSU(3);
@@ -1411,13 +1445,29 @@
             case 9:
                 if(safe)
                 {
-                    alert("已结束")
+                    resultShow.style.display="block";
+                    resultImg.src="AmendLSU.png";
+                    resultText.innerText=""
+                    resultTime.innerText=""
                 }
                 else {
                     drawCross(2,3)
+                    alertTimes=2;
                 }
                 step++;
                 break;
+                case 10:
+                    if(safe){
+                        alert("已结束")
+                    }
+                    else {
+                        resultShow.style.display="block";
+                        resultImg.src="AmendLSUUnsafe.png";
+                        resultText.innerText="全网洪泛LSU包时间"
+                        resultTime.innerText="171 ms"
+                    }
+                    step++;
+                    break;
             default:
                 alert("已结束")
                 break;
@@ -1444,21 +1494,6 @@
                 break;
             case 3:
                 planeLSU(1)
-                /*cxt.beginPath();
-                cxt.moveTo(720+stPostion[10]*4,360-(stPostion[9]*4));
-                for(var j=4;j<8;j++)
-                {
-                    cxt.lineTo(720 + stPostion[ 1+j*3] * 4, 360 - (stPostion[j*3] * 4));
-                }
-                cxt.strokeStyle="#00FF00";
-                cxt.lineWidth=3;
-                cxt.stroke();
-                cxt.moveTo(720+stPostion[1]*4,360-(stPostion[0]*4));
-                cxt.lineTo(720+stPostion[22]*4,360-(stPostion[21]*4));
-                cxt.lineTo(720+stPostion[4]*4,360-(stPostion[3]*4));
-                cxt.lineTo(720+stPostion[7]*4,360-(stPostion[6]*4));
-                cxt.stroke();
-                cxt.closePath();*/
                 step++;
                 break;
             case 4:
@@ -1476,14 +1511,6 @@
                 arrow((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10,720+stPostion[4]*4,360-(stPostion[3]*4),0,0);
                 step++
 
-                /*cxt.beginPath();
-                cxt.moveTo(720+stPostion[10]*4,360-(stPostion[9]*4));
-                cxt.lineTo(720+stPostion[7]*4,360-(stPostion[6]*4));
-                cxt.strokeStyle="#00FF00";
-                cxt.lineWidth=3;
-                cxt.stroke();
-                cxt.closePath();
-                step++*/
                 break;
             case 5:
                 drawCanvasPart(0);
@@ -1494,25 +1521,33 @@
                 step++;
                 break;
             case 6:
-                /*if(safe) {
-                    alert("已结束,并未造成第二次全网洪泛")
-                }
-                else {
-                    cxt.beginPath();
-                    cxt.moveTo(720+stPostion[1]*4,360-(stPostion[0]*4));
-                    for(var j=1;j<8;j++)
-                    {
-                        cxt.lineTo(720 + stPostion[ 1+j*3] * 4, 360 - (stPostion[j*3] * 4));
-                    }
-                    cxt.closePath();
-                    cxt.strokeStyle="#00FF00";
-                    cxt.lineWidth=2;
-                    cxt.stroke();
-                }
-
-                 */
                 planeLSU(2);
                 cxt.drawImage(attackImg,(720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-25,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-25,30,30);//1-2
+
+                if(safe){
+                    sendInfo="";
+                    receiveInfo="";
+
+                    alert("展示Sat2发给Sat1的LSU包的加解密过程")
+                    sendInfo+="<p><strong>Sat2</strong>打包LSU信息包过程</p>"
+                    sendInfo+="<p>LSU明文<strong>(30201,60)</strong></p>"
+                    sendInfo+="<p>经过SM4加密之后的密文：<strong>xxxxxxxxxxxxxxxxxxxxxxxx</strong></p>"
+                    sendInfo+="<p>将密文经过HMAC得到：<strong>xxxxxxxxxxxxxxxxxxxxxxxx</strong></p>"
+
+                    receiveInfo+="<p><strong>Sat1</strong>解析收到的LSU包信息过程</p>"
+                    receiveInfo+="<p>收到的包中的LSU密文：<strong>xxxxxxxxxxxxxxxxxxxxxx</strong></p>"
+                    receiveInfo+="<p>经过HMAC得到<strong>xxxxxxxxxxxxxxxxxxxxxxx</strong></p>"
+                    receiveInfo+="<p><strong>比对一样，认证成功</strong></p>"
+                    receiveInfo+="<p>将密文进行SM4解密得到<strong>(30201,60)</strong></p>"
+
+                    receiveInfoDis.innerHTML=receiveInfo;
+                    sendInfoDis.innerHTML=sendInfo;
+
+                    InfoDisplay.style.display="block";
+                    sendInfoDis.style.display="block";
+                    receiveInfoDis.style.display="block";
+                }
+
 
                 step++
                 break;
@@ -1534,14 +1569,59 @@
             case 8:
                 if(safe)
                 {
-                    alert("已结束，并未造成第三次洪泛")
+                    alert("已结束，并未造成第三次洪泛，并展示攻击卫星给Sat1发送LSU包的加解密过程")
+
+                    sendInfo="";
+                    receiveInfo="";
+                    resultShow.style.display="block";
+                    resultImg.src="DelayLSUSafe.png";
+                    resultText.innerText="全网洪泛LSU包时间"
+                    resultTime.innerText="192 ms"
+
+                    sendInfo+="<p><strong>攻击卫星</strong>打包LSU信息包过程</p>"
+                    sendInfo+="<p>LSU明文<strong>(30201,60)</strong></p>"
+                    sendInfo+="<p>经过SM4加密之后的密文：<strong>xxxxxxxxxxxxxxxxxxxxxxxx</strong></p>"
+                    sendInfo+="<p>将密文经过HMAC得到：<strong>xxxxxxxxxxxxxxxxxxxxxxxx</strong></p>"
+
+                    receiveInfo+="<p><strong>Sat1</strong>解析收到的LSU包信息过程</p>"
+                    receiveInfo+="<p>收到的包中的LSU密文：<strong>xxxxxxxxxxxxxxxxxxxxxx</strong></p>"
+                    receiveInfo+="<p>经过HMAC得到<strong>xxxxxxxxxxxxxxxxxxxxxxx</strong></p>"
+                    receiveInfo+="<p><strong>比对不一样，认证失败，丢弃该LSU包</strong></p>"
+
+                    receiveInfoDis.innerHTML=receiveInfo;
+                    sendInfoDis.innerHTML=sendInfo;
+
+                    InfoDisplay.style.display="block";
+                    sendInfoDis.style.display="block";
+                    receiveInfoDis.style.display="block";
                 }
                 else {
                     planeLSU(3);
                 }
                 step++;
                 break;
+            case 9:
+                if(safe)
+                {
+                    resultShow.style.display="block";
+                    resultImg.src="DelayLSU.png";
+                    resultText.innerText=""
+                    resultTime.innerText=""
+                }
+                else {
+                    resultShow.style.display="block";
+                    resultImg.src="DelayLSUUnsafe.png";
+                    resultText.innerText="全网洪泛LSU包时间"
+                    resultTime.innerText="171 ms"
+                    alertTimes=2;
+                }
+                step++;
+                break;
+
             default:
+                InfoDisplay.style.display="none";
+                sendInfoDis.style.display="none";
+                receiveInfoDis.style.display="none";
                 alert("已结束")
                 break;
         }
