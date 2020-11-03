@@ -1646,7 +1646,39 @@
                     receiveInfoDis.style.display="block";
                 }
                 else {
-                    planeLSU(3);
+                    alertFlag=0;
+                    alertTimes=1;
+                    let pointThird1_=[
+
+                        [720+stPostion[1]*4,360-(stPostion[0]*4)],
+                        [720+stPostion[22]*4,360-(stPostion[21]*4)],
+                        [720+stPostion[19]*4,360-(stPostion[18]*4)],
+                        [720+stPostion[16]*4,360-(stPostion[15]*4)],
+                        [720+stPostion[13]*4,360-(stPostion[12]*4)],
+                        [720+stPostion[10]*4,360-(stPostion[9]*4)],
+                        //[720+stPostion[7]*4,360-(stPostion[6]*4)]
+                        //[720+stPostion[7]*4,360-(stPostion[6]*4)],
+                        //[720+stPostion[4]*4,360-(stPostion[3]*4)]
+                    ]
+                    let pointThird2_=[
+                        [720+stPostion[1]*4,360-(stPostion[0]*4)],
+                        [720+stPostion[4]*4,360-(stPostion[3]*4)],
+                        [720+stPostion[7]*4,360-(stPostion[6]*4)],
+                        //[720+stPostion[10]*4,360-(stPostion[9]*4)]
+                        //[720+stPostion[13]*4,360-(stPostion[12]*4)],
+                        //[720+stPostion[16]*4,360-(stPostion[15]*4)],
+                        //[720+stPostion[19]*4,360-(stPostion[18]*4)],
+                        //[720+stPostion[22]*4,360-(stPostion[21]*4)]
+                    ]
+                    NONE=true;
+                    UP=false;
+                    RIGHT=false;
+                    DOWN=false;
+                    alertFlag=1;
+                    alertNote="由于攻击卫星导致的第三次LSU洪泛完成"
+                    AnimateLine(pointThird2_,0,1);
+                    alertFlag=0
+                    AnimateLine(pointThird1_,0,1);
                 }
                 step++;
                 break;
