@@ -190,6 +190,11 @@
     }
 
     function selectMod(){
+
+        InfoDisplay.style.display="none";
+        sendInfoDis.style.display="none";
+        receiveInfoDis.style.display="none";
+
         var myselect=document.getElementById("attackMod");
         var index=myselect.selectedIndex;
         var Mod=myselect.options[index].value;
@@ -1495,6 +1500,26 @@
             case 3:
                 planeLSU(1)
                 step++;
+                if(safe){
+                    sendInfo="";
+                    receiveInfo="";
+
+                    alert("展示LSU包的加密过程")
+
+                    receiveInfo+="<p>30s时人为将st3--st4链路断开，st3/st4向全网洪泛st3-st4链路故障信息并更新路由(LSUv1)。</p>"
+                    receiveInfo+="<p>报文：<strong>31400</strong></p>"
+                    receiveInfo+="<p>SM4密钥为：<strong>0123456789abcdef0123456789abcdef</strong></p>"
+                    receiveInfo+="<p>经过SM4加密得到：<strong>5b8cd1f3536e2ee178d97873ef2343a2</strong></p>"
+                    receiveInfo+="<p>HMAC hash密钥为<strong>201</strong></p>"
+                    receiveInfo+="<p>经过HMAC hash加密得到<strong>27badc983df1780b60c2b3fa9b3a19a00e46aac798451f0febdca52920faaddf</strong></p>"
+
+                    receiveInfoDis.innerHTML=receiveInfo;
+                    //sendInfoDis.innerHTML=sendInfo;
+
+                    InfoDisplay.style.display="block";
+                    //sendInfoDis.style.display="block";
+                    receiveInfoDis.style.display="block";
+                }
                 break;
             case 4:
                 cxt.drawImage(attackImg,(720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-25,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-25,30,30);//1-2
@@ -1510,6 +1535,26 @@
                 //arrow((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10,720+stPostion[1]*4,360-(stPostion[0]*4),1);
                 arrow((720+stPostion[1]*4-15+720+stPostion[4]*4-15)/2-10,(360-(stPostion[0]*4)-15+360-(stPostion[3]*4)-15)/2-10,720+stPostion[4]*4,360-(stPostion[3]*4),0,0);
                 step++
+
+                if(safe){
+                    sendInfo="";
+                    receiveInfo="";
+
+                    alert("展示攻击卫星截获LSU包之后的解密过程")
+                    sendInfo+="<p>攻击节点<strong>截获LSUv1数据包</strong></p>"
+                    sendInfo+="<p>攻击节点的SM4密钥为：<strong>1111111111111111111111111111111</strong></p>"
+                    sendInfo+="<p>经过不正确的密钥解密之后：<strong>39ef1af19e8e8b7fb528267bbc52b3f51</strong></p>"
+                    sendInfo+="<p><strong>攻击节点无法得出正确明文</strong></p>"
+
+
+
+                    //receiveInfoDis.innerHTML=receiveInfo;
+                    sendInfoDis.innerHTML=sendInfo;
+
+                    InfoDisplay.style.display="block";
+                    sendInfoDis.style.display="block";
+                    //receiveInfoDis.style.display="block";
+                }
 
                 break;
             case 5:
@@ -1529,16 +1574,19 @@
                     receiveInfo="";
 
                     alert("展示Sat2发给Sat1的LSU包的加解密过程")
-                    sendInfo+="<p><strong>Sat2</strong>打包LSU信息包过程</p>"
-                    sendInfo+="<p>LSU明文<strong>(30201,60)</strong></p>"
-                    sendInfo+="<p>经过SM4加密之后的密文：<strong>xxxxxxxxxxxxxxxxxxxxxxxx</strong></p>"
-                    sendInfo+="<p>将密文经过HMAC得到：<strong>xxxxxxxxxxxxxxxxxxxxxxxx</strong></p>"
+                    sendInfo+="<p><strong>Sat2</strong>打包第二次洪泛LSU信息包过程</p>"
+                    sendInfo+="<p>LSU包明文<strong>31401</strong></p>"
+                    sendInfo+="<p>SM4密钥为：<strong>0123456789abcdef0123456789abcdef</strong></p>"
+                    sendInfo+="<p>经过SM4加密之后的密文：<strong>0fa9bb999feb04091e2682aa25de3bef</strong></p>"
+                    sendInfo+="<p>HMAC hash密钥为：<strong>201</strong></p>"
+                    sendInfo+="<p>将密文经过HMAC得到：<strong>43974ed74066b207c30ffd0fed5146762e6c60745ac977004bc14507c7c42b5</strong></p>"
 
                     receiveInfo+="<p><strong>Sat1</strong>解析收到的LSU包信息过程</p>"
-                    receiveInfo+="<p>收到的包中的LSU密文：<strong>xxxxxxxxxxxxxxxxxxxxxx</strong></p>"
-                    receiveInfo+="<p>经过HMAC得到<strong>xxxxxxxxxxxxxxxxxxxxxxx</strong></p>"
+                    receiveInfo+="<p>收到的包中的LSU密文：<strong>0fa9bb999feb04091e2682aa25de3bef</strong></p>"
+                    receiveInfo+="<p>经过<strong>密钥为201</strong>的HMAC得到<strong>43974ed74066b207c30ffd0fed5146762e6c60745ac977004bc14507c7c42b5</strong></p>"
                     receiveInfo+="<p><strong>比对一样，认证成功</strong></p>"
-                    receiveInfo+="<p>将密文进行SM4解密得到<strong>(30201,60)</strong></p>"
+                    receiveInfo+="<p>将密文SM4解密得到:<strong>31401</strong></p>"
+                    receiveInfo+="<p><strong>得到正确的LSU报文，进行路由更新</strong></p>"
 
                     receiveInfoDis.innerHTML=receiveInfo;
                     sendInfoDis.innerHTML=sendInfo;
@@ -1579,13 +1627,15 @@
                     resultTime.innerText="192 ms"
 
                     sendInfo+="<p><strong>攻击卫星</strong>打包LSU信息包过程</p>"
-                    sendInfo+="<p>LSU明文<strong>(30201,60)</strong></p>"
-                    sendInfo+="<p>经过SM4加密之后的密文：<strong>xxxxxxxxxxxxxxxxxxxxxxxx</strong></p>"
-                    sendInfo+="<p>将密文经过HMAC得到：<strong>xxxxxxxxxxxxxxxxxxxxxxxx</strong></p>"
+                    sendInfo+="<p>攻击LSU明文<strong>31400</strong></p>"
+                    sendInfo+="<p>攻击卫星SM4密钥为：<strong>1111111111111111111111111111111</strong></p>"
+                    sendInfo+="<p>经过SM4加密之后的密文：<strong>39ef1af19e8e8b7fb528267bbc52b3f51</strong></p>"
+                    sendInfo+="<p>攻击卫星的HMAC密钥为：<strong>1</strong></p>"
+                    sendInfo+="<p>将密文经过HMAC得到：<strong>6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b</strong></p>"
 
                     receiveInfo+="<p><strong>Sat1</strong>解析收到的LSU包信息过程</p>"
-                    receiveInfo+="<p>收到的包中的LSU密文：<strong>xxxxxxxxxxxxxxxxxxxxxx</strong></p>"
-                    receiveInfo+="<p>经过HMAC得到<strong>xxxxxxxxxxxxxxxxxxxxxxx</strong></p>"
+                    receiveInfo+="<p>收到的包中的LSU密文：<strong>39ef1af19e8e8b7fb528267bbc52b3f51</strong></p>"
+                    receiveInfo+="<p>经过本地密钥为201的HMAC得到<strong>d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35</strong></p>"
                     receiveInfo+="<p><strong>比对不一样，认证失败，丢弃该LSU包</strong></p>"
 
                     receiveInfoDis.innerHTML=receiveInfo;
